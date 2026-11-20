@@ -141,6 +141,44 @@
           Importar e distribuir perfis nos blocos
         </button>
       </form>
+      <div class="card" style="margin-top: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;">
+          <div>
+            <h2 class="section-title" style="margin-bottom: 4px;">Gerenciar e Excluir Perfis (Sincronizado com Supabase)</h2>
+            <p class="section-subtitle" style="margin-bottom: 0;">
+              Exclua perfis individualmente, remova um bloco inteiro (A, B, C ou D) ou limpe a lista completa.
+            </p>
+          </div>
+        </div>
+
+        <div class="filters-bar" style="align-items: end;">
+          <div class="field">
+            <label for="filtroBlocoExcluir">Excluir por Bloco</label>
+            <select id="filtroBlocoExcluir" class="select">
+              <option value="A">Bloco A</option>
+              <option value="B">Bloco B</option>
+              <option value="C">Bloco C</option>
+              <option value="D">Bloco D</option>
+            </select>
+          </div>
+          <div class="field">
+            <button type="button" id="btnExcluirBloco" class="btn btn-warning">
+              Excluir Bloco Selecionado
+            </button>
+          </div>
+          <div class="field">
+            <label for="buscaPerfisAdmin">Filtrar perfis exibidos</label>
+            <input id="buscaPerfisAdmin" type="search" class="input" placeholder="Ex.: @usuario, bloco, tema..." />
+          </div>
+          <div class="field">
+            <button type="button" id="btnExcluirListaCompleta" class="btn btn-danger">
+              Excluir Lista Completa
+            </button>
+          </div>
+        </div>
+
+        <div id="listaPerfisAdminContainer"></div>
+      </div>
     </section>
 
     <!-- ABA 4: SCRIPTS INICIAIS (SEM LINK) -->

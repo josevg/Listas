@@ -9,7 +9,8 @@ const AdminState = {
   subcategorias: [],
   scripts: [],
   metricas: [],
-  totalPerfisAtivos: 0
+  totalPerfisAtivos: 0,
+  perfisAdmin: []
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -78,7 +79,7 @@ async function carregarTudoAdmin() {
     supabaseClient.from("subcategorias").select("*").order("ordem"),
     supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false }),
     supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false }),
-    supabaseClient.from("perfis_leads").select("id", { count: "exact", head: true }).eq("ativo", true).eq("reportado_invalido", false)
+    supabaseClient.from("perfis_leads").select("*", { count: "exact" }).order("criado_em", { ascending: false }).limit(1000)
   ]);
 
   AdminState.usuarios = resUsers.data || [];
@@ -86,13 +87,15 @@ async function carregarTudoAdmin() {
   AdminState.subcategorias = resSub.data || [];
   AdminState.scripts = resScripts.data || [];
   AdminState.metricas = resMetricas.data || [];
-  AdminState.totalPerfisAtivos = resPerfisCount.count || 0;
+  AdminState.perfisAdmin = resPerfisCount.data || [];
+  AdminState.totalPerfisAtivos = AdminState.perfisAdmin.filter((p) => p.ativo && !p.reportado_invalido).length;
 
   atualizarCardsTopoAdmin();
   popularSelectsCategoriasAdmin();
   renderizarTabelaTerapeutas();
   renderizarListaCategoriasAdmin();
   renderizarListaScriptsAdmin();
+  renderizarListaPerfisAdmin();
   renderizarRelatoriosTerapeutas();
 }
 
@@ -349,6 +352,9 @@ function renderizarRelatoriosTerapeutas() {
 }
 
 function configurarFormulariosAdmin() {
+  document.getElementById("buscaPerfisAdmin")?.addEventListener("input", () => renderizarListaPerfisAdmin());
+  document.getElementById("btnExcluirBloco")?.addEventListener("click", excluirBlocoAdmin);
+  document.getElementById("btnExcluirListaCompleta")?.addEventListener("click", excluirListaCompletaAdmin);
   document.getElementById("importCatPrincipal").addEventListener("change", () => {
     sincronizarSubcategoriasSelect("importCatPrincipal", "importSubcategoria", false);
   });
@@ -499,4 +505,117 @@ function configurarFormulariosAdmin() {
     mostrarAlertaAdmin("success", "Script salvo com sucesso!");
     await carregarTudoAdmin();
   });
+}
+
+function renderizarListaPerfisAdmin() {
+  const container = document.getElementById("listaPerfisAdminContainer");
+  if (!container) return;
+
+  const termo = (document.getElementById("buscaPerfisAdmin")?.value || "").trim().toLowerCase();
+  const subMap = new Map(AdminState.subcategorias.map((s) => [s.id, s.nome]));
+
+  let lista = AdminState.perfisAdmin;
+  if (termo) {
+    lista = lista.filter((p) => {
+      const subNome = (subMap.get(p.subcategoria_id) || "").toLowerCase();
+      return (
+        (p.username || "").toLowerCase().includes(termo) ||
+        (p.nome_exibicao || "").toLowerCase().includes(termo) ||
+        (p.bloco_rotacao || "").toLowerCase().includes(termo) ||
+        subNome.includes(termo)
+      );
+    });
+  }
+
+  if (!lista.length) {
+    container.innerHTML = `<div class="empty-state">Nenhum perfil encontrado na base.</div>`;
+    return;
+  }
+
+  const visiveis = lista.slice(0, 100);
+  container.innerHTML = `
+    <div style="margin-bottom: 8px; font-size: 0.85rem; color: var(--text-muted);">
+      Exibindo ${visiveis.length} de ${lista.length} perfil(is) no banco.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Perfil</th>
+            <th>Subcategoria</th>
+            <th>Bloco</th>
+            <th>Score</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${visiveis
+            .map(
+              (p) => `
+            <tr>
+              <td><strong>@${p.username.replace(/^@/, "")}</strong><br><small>${p.nome_exibicao || ""}</small></td>
+              <td>${subMap.get(p.subcategoria_id) || "-"}</td>
+              <td><span class="badge badge-primary">Bloco ${p.bloco_rotacao}</span></td>
+              <td>${p.score_engajamento}</td>
+              <td>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="excluirPerfilAdmin('${p.id}', '${p.username.replace(/'/g, "")}')">
+                  Excluir
+                </button>
+              </td>
+            </tr>
+          `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function excluirPerfilAdmin(perfilId, username) {
+  if (!confirm(`Deseja excluir o perfil @${username} da base no Supabase?`)) return;
+
+  const { error } = await supabaseClient.from("perfis_leads").delete().eq("id", perfilId);
+  if (error) {
+    mostrarAlertaAdmin("danger", `Erro ao excluir perfil: ${error.message}`);
+    return;
+  }
+
+  mostrarAlertaAdmin("success", `Perfil @${username} removido da base.`);
+  await carregarTudoAdmin();
+}
+
+async function excluirBlocoAdmin() {
+  const bloco = document.getElementById("filtroBlocoExcluir").value;
+  if (!confirm(`Deseja excluir TODOS os perfis do Bloco ${bloco} no Supabase? Essa ação não pode ser desfeita.`)) return;
+
+  const { error } = await supabaseClient.from("perfis_leads").delete().eq("bloco_rotacao", bloco);
+  if (error) {
+    mostrarAlertaAdmin("danger", `Erro ao excluir Bloco ${bloco}: ${error.message}`);
+    return;
+  }
+
+  mostrarAlertaAdmin("success", `Todos os perfis do Bloco ${bloco} foram removidos.`);
+  await carregarTudoAdmin();
+}
+
+async function excluirListaCompletaAdmin() {
+  const confirmacao = prompt('Atenção: isso apagará TODA a lista de perfis no Supabase. Digite EXCLUIR TUDO para confirmar:');
+  if (confirmacao !== "EXCLUIR TUDO") {
+    mostrarAlertaAdmin("warning", "Exclusão completa cancelada.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("perfis_leads")
+    .delete()
+    .not("id", "is", null);
+
+  if (error) {
+    mostrarAlertaAdmin("danger", `Erro ao excluir lista completa: ${error.message}`);
+    return;
+  }
+
+  mostrarAlertaAdmin("success", "Lista completa de perfis removida do Supabase.");
+  await carregarTudoAdmin();
 }
