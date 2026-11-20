@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Terapeuta — Mapa de Conversas</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="app.html" class="brand">
+        <span class="brand-badge">PAINEL</span>
+        <span>Mapa de Conversas</span>
+      </a>
+      <div class="topbar-actions">
+        <span id="infoUsuarioTop" class="user-pill">Carregando...</span>
+        <a id="linkAdmin" href="admin.html" class="btn btn-outline btn-sm hidden">Ir para Admin</a>
+        <button type="button" id="btnSair" class="btn btn-ghost btn-sm">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page-main">
+    <!-- TELA DE ACESSO BLOQUEADO / PENDENTE / EXPIRADO -->
+    <section id="telaBloqueio" class="card hidden" style="max-width: 620px; margin: 30px auto; text-align: center;">
+      <span class="badge badge-warning" style="margin-bottom: 10px;">Status da Conta</span>
+      <h1 id="tituloBloqueio" class="section-title">Acesso pendente de liberação</h1>
+      <p id="msgBloqueio" class="section-subtitle" style="margin-bottom: 18px;">
+        Seu cadastro foi recebido e aguarda ativação.
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <button type="button" onclick="window.location.reload()" class="btn btn-primary">Verificar novamente</button>
+        <button type="button" id="btnSairBloqueio" class="btn btn-outline">Sair da conta</button>
+      </div>
+    </section>
+
+    <!-- CONTEÚDO PRINCIPAL DO TERAPEUTA ATIVO -->
+    <div id="conteudoApp" class="hidden">
+      <!-- GUIA DE SEGURANÇA E BOAS PRÁTICAS NO TOPO -->
+      <section class="alert alert-info" aria-label="Guia de segurança no Instagram">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+          <div>
+            <h1 class="section-title" style="margin-bottom: 4px;">
+              Orientações importantes antes de enviar mensagens no Instagram
+            </h1>
+            <p style="font-size: 0.92rem; color: var(--text-muted);">
+              Siga estas boas práticas em cada perfil do Instagram que você utilizar para manter sua conta segura e aumentar suas respostas:
+            </p>
+          </div>
+          <button type="button" id="btnToggleGuia" class="btn btn-outline btn-sm">Ocultar detalhes</button>
+        </div>
+
+        <div id="corpoGuiaSeguranca" class="safety-grid">
+          <div class="safety-box">
+            <strong>1. Quantidade ideal por dia (Anti-bloqueio)</strong>
+            Envie no máximo <strong>10 a 15 mensagens iniciais por dia</strong> se o seu perfil do Instagram for novo ou pouco movimentado, e <strong>20 a 25 mensagens por dia</strong> se for um perfil antigo e aquecido. Sempre faça pausas ao longo do dia — nunca envie tudo em poucos minutos.
+          </div>
+          <div class="safety-box">
+            <strong>2. Nunca envie link na 1ª mensagem</strong>
+            Não coloque link de WhatsApp, site ou agendamento na primeira abordagem. O Instagram bloqueia ou oculta solicitações com links enviados para quem ainda não te segue.
+          </div>
+          <div class="safety-box">
+            <strong>3. Comece com uma pergunta do tema</strong>
+            Use apenas um texto curto e acolhedor com uma <strong>pergunta aberta ligada à categoria</strong> (ex.: Ansiedade, Depressão). Depois que a pessoa responder e aceitar a conversa, aí sim você dá continuidade e envia seu contato ou link.
+          </div>
+        </div>
+
+        <!-- TERMÔMETRO DIÁRIO LOCAL -->
+        <div style="margin-top: 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.9rem; font-weight: 600;">
+              Cadência de hoje neste navegador: <span id="textoCadenciaHoje">0 / 15 abordagens recomendadas</span>
+            </span>
+            <span id="statusCadenciaBadge" class="badge badge-success">Ritmo seguro</span>
+          </div>
+          <div class="meter-bar">
+            <div id="barraCadenciaHoje" class="meter-fill"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CARDS DE RESUMO -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Seu Grupo / Bloco</div>
+          <div id="statGrupoBloco" class="stat-value">G1 • Bloco A</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Contatados (Local)</div>
+          <div id="statTotalContatados" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Engajados Salvos</div>
+          <div id="statTotalEngajados" class="stat-value">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Validade do Acesso</div>
+          <div id="statValidade" class="stat-value" style="font-size: 1.05rem; padding-top: 6px;">Ativo</div>
+        </div>
+      </section>
+
+      <!-- ABAS DE NAVEGAÇÃO -->
+      <div class="tabs">
+        <button type="button" class="tab-btn active" data-aba="explorar">Explorar Perfis</button>
+        <button type="button" class="tab-btn" data-aba="contatados">Já Contatados</button>
+        <button type="button" class="tab-btn" data-aba="engajados">Lista de Engajados</button>
+        <button type="button" class="tab-btn" data-aba="backup">Backup Local</button>
+      </div>
+
+      <!-- ABA 1: EXPLORAR PERFIS -->
+      <section id="abaExplorar">
+        <div class="card" style="margin-bottom: 16px;">
+          <div class="filters-bar">
+            <div class="field">
+              <label for="filtroCategoriaPrincipal">Categoria Principal</label>
+              <select id="filtroCategoriaPrincipal" class="select"></select>
+            </div>
+            <div class="field">
+              <label for="filtroSubcategoria">Subcategoria (Tema)</label>
+              <select id="filtroSubcategoria" class="select"></select>
+            </div>
+            <div class="field">
+              <label for="filtroOrdenacao">Ordenação</label>
+              <select id="filtroOrdenacao" class="select">
+                <option value="rotacao">Prioridade do meu Bloco (Rotação)</option>
+                <option value="engajamento">Mais Engajados primeiro</option>
+                <option value="recentes">Mais Recentes primeiro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filtroStatusLocal">Exibição</label>
+              <select id="filtroStatusLocal" class="select">
+                <option value="nao_contatados">Ocultar já contatados</option>
+                <option value="todos">Mostrar todos</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="filters-bar" style="margin-bottom: 0;">
+            <div class="field">
+              <label for="selectScriptModelo">Modelo de Script Inicial (Sem Link)</label>
+              <select id="selectScriptModelo" class="select"></select>
+            </div>
+            <div class="field">
+              <label for="buscaPerfil">Buscar por @username ou nome</label>
+              <input id="buscaPerfil" type="search" class="input" placeholder="Ex.: maria, ansiedade..." />
+            </div>
+          </div>
+        </div>
+
+        <div id="listaLeadsContainer" class="leads-grid"></div>
+
+        <div style="text-align: center; margin-top: 20px;">
+          <button type="button" id="btnCarregarMais" class="btn btn-outline hidden">
+            Carregar mais perfis
+          </button>
+        </div>
+      </section>
+
+      <!-- ABA 2: JÁ CONTATADOS (LOCAL) -->
+      <section id="abaContatados" class="hidden">
+        <div class="card">
+          <h2 class="section-title">Perfis marcados como contatados neste navegador</h2>
+          <p class="section-subtitle">
+            Sempre que você copia o script ou abre o perfil, ele fica registrado aqui localmente para você não abordar a mesma pessoa duas vezes por engano.
+          </p>
+          <div id="listaContatadosContainer"></div>
+        </div>
+      </section>
+
+      <!-- ABA 3: LISTA DE ENGAJADOS (LOCAL) -->
+      <section id="abaEngajados" class="hidden">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+            <div>
+              <h2 class="section-title">Pessoas Engajadas e Interessadas</h2>
+              <p class="section-subtitle" style="margin-bottom: 0;">
+                Organize quem respondeu à sua pergunta inicial, demonstrou interesse ou agendou conversa.
+              </p>
+            </div>
+            <select id="filtroEstagioEngajado" class="select" style="max-width: 220px;">
+              <option value="todos">Todos os estágios</option>
+              <option value="agendado">Agendou conversa</option>
+              <option value="interessado">Demonstrou interesse</option>
+              <option value="respondeu">Respondeu mensagem</option>
+            </select>
+          </div>
+          <div id="listaEngajadosContainer"></div>
+        </div>
+      </section>
+
+      <!-- ABA 4: BACKUP LOCAL -->
+      <section id="abaBackup" class="hidden">
+        <div class="card" style="max-width: 640px;">
+          <h2 class="section-title">Backup dos seus dados locais</h2>
+          <p class="section-subtitle">
+            Como suas marcações de contatados, lista de engajados e anotações ficam salvas localmente no navegador para máxima velocidade e privacidade, você pode baixar uma cópia de segurança em arquivo JSON ou restaurar em outro dispositivo.
+          </p>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <button type="button" id="btnExportarBackup" class="btn btn-primary">
+              Baixar backup (.json)
+            </button>
+            <label class="btn btn-outline" style="cursor: pointer;">
+              Restaurar backup (.json)
+              <input type="file" id="inputImportarBackup" accept=".json" class="hidden" />
+            </label>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rotacao.js"></script>
+  <script src="js/local-db.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
