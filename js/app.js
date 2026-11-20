@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   AppState.perfil = auth.perfil;
 
-  document.getElementById("infoUsuarioTop").textContent = `${auth.perfil.nome} • Grupo ${auth.perfil.grupo_rotacao}`;
+  document.getElementById("infoUsuarioTop").textContent = auth.perfil.nome;
   document.getElementById("btnSair").addEventListener("click", () => AuthService.logout());
   document.getElementById("btnSairBloqueio").addEventListener("click", () => AuthService.logout());
 
@@ -260,7 +260,7 @@ function renderizarListaLeads() {
                 <div class="lead-handle">@${lead.username.replace(/^@/, "")}</div>
                 <div class="lead-sub">${lead.nome_exibicao || "Perfil do Instagram"}</div>
               </div>
-              <span class="badge badge-primary">Bloco ${lead.bloco_rotacao}</span>
+              
             </div>
 
             <div class="lead-meta">
@@ -503,10 +503,8 @@ function removerDaListaEngajados(leadId) {
 
 function atualizarResumoSuperior() {
   const resumo = LocalDB.obterResumoHoje(AppState.perfil.id);
-  const blocoPrincipal = RotacaoService.obterBlocoPrincipal(AppState.perfil.grupo_rotacao);
   const meta = AppState.perfil.meta_diaria || 15;
 
-  document.getElementById("statGrupoBloco").textContent = `G${AppState.perfil.grupo_rotacao} • Bloco ${blocoPrincipal}`;
   document.getElementById("statTotalContatados").textContent = resumo.totalContatados;
   document.getElementById("statTotalEngajados").textContent = resumo.totalEngajados;
 
@@ -539,3 +537,29 @@ function atualizarResumoSuperior() {
     badge.textContent = "Ritmo seguro";
   }
 }
+
+// Modo de inspeção do Admin (?terapeuta_id=UUID) para visualizar o grupo/bloco de um terapeuta
+(async function initInspecaoAdmin() {
+  const params = new URLSearchParams(window.location.search);
+  const alvoId = params.get("terapeuta_id");
+  if (!alvoId) return;
+
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) return;
+  const eu = await AuthService.obterPerfilUsuario(session.user.id);
+  if (!eu || eu.role !== "admin") return;
+
+  const alvo = await AuthService.obterPerfilUsuario(alvoId);
+  if (!alvo) return;
+
+  const bloco = typeof RotacaoService !== "undefined"
+    ? RotacaoService.obterBlocoPrincipal(alvo.grupo_rotacao || 1)
+    : "A";
+
+  const banner = document.createElement("div");
+  banner.className = "alert alert-warning";
+  banner.style.marginTop = "14px";
+  banner.innerHTML = `<strong>Visão Admin do Terapeuta:</strong> ${alvo.nome} (${alvo.email}) — <strong>Grupo ${alvo.grupo_rotacao || 1} • Bloco ${bloco}</strong>`;
+  const main = document.querySelector("main.container");
+  if (main) main.prepend(banner);
+})();

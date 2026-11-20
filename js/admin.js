@@ -306,16 +306,23 @@ function renderizarRelatoriosTerapeutas() {
     const engajados = logs.reduce((max, l) => Math.max(max, l.leads_engajados || 0), 0);
     const ultimoAcesso = logs.length ? new Date(logs[0].ultimo_acesso).toLocaleString("pt-BR") : "Nunca acessou";
     const temaMaisUsado = logs.find((l) => l.categoria_mais_usada)?.categoria_mais_usada || "-";
+    const grupoNum = u.grupo_rotacao || 1;
+    const blocoAtual = typeof RotacaoService !== "undefined" ? RotacaoService.obterBlocoPrincipal(grupoNum) : "A";
 
     return `
       <tr>
         <td><strong>${u.nome}</strong><br><small>${u.email}</small></td>
-        <td>Grupo ${u.grupo_rotacao || 1}</td>
+        <td><span class="badge badge-primary">G${grupoNum} • Bloco ${blocoAtual}</span></td>
         <td><strong>${copiados}</strong></td>
         <td><strong>${abertos}</strong></td>
         <td><span class="badge badge-success">${engajados}</span></td>
         <td>${temaMaisUsado}</td>
         <td>${ultimoAcesso}</td>
+        <td>
+          <a href="app.html?terapeuta_id=${u.id}" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+            Ver Painel
+          </a>
+        </td>
       </tr>
     `;
   });
@@ -326,12 +333,13 @@ function renderizarRelatoriosTerapeutas() {
         <thead>
           <tr>
             <th>Terapeuta</th>
-            <th>Grupo</th>
+            <th>Grupo / Bloco</th>
             <th>Scripts Copiados</th>
             <th>Perfis Abertos</th>
             <th>Engajados</th>
             <th>Tema Recente</th>
             <th>Último Acesso</th>
+            <th>Painel</th>
           </tr>
         </thead>
         <tbody>${linhas.join("")}</tbody>
