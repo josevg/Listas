@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar Senha — Mapa de Conversas</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">TERAPEUTAS</span>
+        <span>Mapa de Conversas</span>
+      </a>
+      <div class="topbar-actions">
+        <a href="login.html" class="btn btn-outline btn-sm">Voltar para login</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page-main">
+    <div class="card auth-box">
+      <div id="alertaRec" class="alert hidden"></div>
+
+      <!-- ETAPA 1: SOLICITAR LINK POR E-MAIL -->
+      <div id="blocoSolicitar">
+        <h1 class="section-title">Recuperar senha</h1>
+        <p class="section-subtitle">
+          Informe o e-mail da sua conta para receber o link de redefinição de senha.
+        </p>
+        <form id="formSolicitar">
+          <div class="field" style="margin-bottom: 14px;">
+            <label for="recEmail">Seu e-mail</label>
+            <input id="recEmail" type="email" class="input" required placeholder="seu@email.com" />
+          </div>
+          <button type="submit" id="btnSolicitar" class="btn btn-primary" style="width: 100%;">
+            Enviar link de recuperação
+          </button>
+        </form>
+      </div>
+
+      <!-- ETAPA 2: DEFINIR NOVA SENHA (QUANDO VEM DO LINK DO E-MAIL) -->
+      <div id="blocoNovaSenha" class="hidden">
+        <h1 class="section-title">Criar nova senha</h1>
+        <p class="section-subtitle">
+          Digite sua nova senha abaixo para concluir a recuperação.
+        </p>
+        <form id="formNovaSenha">
+          <div class="field" style="margin-bottom: 14px;">
+            <label for="novaSenha">Nova senha (mínimo 6 caracteres)</label>
+            <input id="novaSenha" type="password" class="input" minlength="6" required placeholder="Nova senha" />
+          </div>
+          <button type="submit" id="btnSalvarSenha" class="btn btn-primary" style="width: 100%;">
+            Salvar nova senha
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    const alertaRec = document.getElementById("alertaRec");
+    const blocoSolicitar = document.getElementById("blocoSolicitar");
+    const blocoNovaSenha = document.getElementById("blocoNovaSenha");
+
+    function mostrarAlerta(tipo, msg) {
+      alertaRec.className = `alert alert-${tipo}`;
+      alertaRec.textContent = msg;
+      alertaRec.classList.remove("hidden");
+    }
+
+    supabaseClient.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        blocoSolicitar.classList.add("hidden");
+        blocoNovaSenha.classList.remove("hidden");
+      }
+    });
+
+    if (window.location.hash.includes("type=recovery")) {
+      blocoSolicitar.classList.add("hidden");
+      blocoNovaSenha.classList.remove("hidden");
+    }
+
+    document.getElementById("formSolicitar").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btnSolicitar");
+      btn.disabled = true;
+      btn.textContent = "Enviando...";
+
+      try {
+        await AuthService.enviarRecuperacaoSenha(document.getElementById("recEmail").value);
+        mostrarAlerta("success", "Se este e-mail estiver cadastrado, enviamos o link de recuperação para ele.");
+      } catch (err) {
+        mostrarAlerta("danger", err.message || "Erro ao solicitar recuperação.");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Enviar link de recuperação";
+      }
+    });
+
+    document.getElementById("formNovaSenha").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById("btnSalvarSenha");
+      btn.disabled = true;
+      btn.textContent = "Salvando...";
+
+      try {
+        await AuthService.atualizarSenha(document.getElementById("novaSenha").value);
+        mostrarAlerta("success", "Senha atualizada com sucesso! Redirecionando para o login...");
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1600);
+      } catch (err) {
+        mostrarAlerta("danger", err.message || "Não foi possível atualizar a senha.");
+        btn.disabled = false;
+        btn.textContent = "Salvar nova senha";
+      }
+    });
+  </script>
+</body>
+</html>
