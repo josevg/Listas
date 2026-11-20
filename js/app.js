@@ -157,7 +157,7 @@ function atualizarSelectScripts() {
   const listaFinal = disponiveis.length ? disponiveis : AppState.scripts;
   const selScript = document.getElementById("selectScriptModelo");
 
-  const opcoesVariacao = `<option value="__30_VARIACOES__">Rotação automática (30 mensagens diferentes sem link)</option>`;
+  const opcoesVariacao = `<option value="__30_VARIACOES__">Sugestão de mensagem (padrão)</option>`;
   if (!listaFinal.length) {
     selScript.innerHTML = `${opcoesVariacao}<option value="">Script padrão de acolhimento</option>`;
     return;

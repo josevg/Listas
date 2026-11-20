@@ -73,13 +73,14 @@ function configurarAbasAdmin() {
 }
 
 async function carregarTudoAdmin() {
-  const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfisCount] = await Promise.all([
+  const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfisCount, resPerfisLista] = await Promise.all([
     supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: false }),
     supabaseClient.from("categorias_principais").select("*").order("ordem"),
     supabaseClient.from("subcategorias").select("*").order("ordem"),
     supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false }),
     supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false }),
-    supabaseClient.from("perfis_leads").select("*", { count: "exact" }).order("criado_em", { ascending: false }).limit(1000)
+    supabaseClient.from("perfis_leads").select("id", { count: "exact", head: true }).eq("ativo", true).eq("reportado_invalido", false),
+    supabaseClient.from("perfis_leads").select("*").order("criado_em", { ascending: false }).range(0, 4999)
   ]);
 
   AdminState.usuarios = resUsers.data || [];
@@ -87,8 +88,8 @@ async function carregarTudoAdmin() {
   AdminState.subcategorias = resSub.data || [];
   AdminState.scripts = resScripts.data || [];
   AdminState.metricas = resMetricas.data || [];
-  AdminState.perfisAdmin = resPerfisCount.data || [];
-  AdminState.totalPerfisAtivos = AdminState.perfisAdmin.filter((p) => p.ativo && !p.reportado_invalido).length;
+  AdminState.perfisAdmin = resPerfisLista.data || [];
+  AdminState.totalPerfisAtivos = typeof resPerfisCount.count === 'number' ? resPerfisCount.count : AdminState.perfisAdmin.length;
 
   atualizarCardsTopoAdmin();
   popularSelectsCategoriasAdmin();
@@ -609,7 +610,7 @@ async function excluirListaCompletaAdmin() {
   const { error } = await supabaseClient
     .from("perfis_leads")
     .delete()
-    .not("id", "is", null);
+    .neq("id", "00000000-0000-0000-0000-000000000000");
 
   if (error) {
     mostrarAlertaAdmin("danger", `Erro ao excluir lista completa: ${error.message}`);
