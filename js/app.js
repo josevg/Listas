@@ -9,7 +9,8 @@ const AppState = {
   scripts: [],
   leadsCarregados: [],
   limiteExibicao: 30,
-  abaAtual: "explorar"
+  abaAtual: "explorar",
+  textosEditados: {}
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -80,7 +81,7 @@ function configurarEventosUI() {
 
   document.getElementById("filtroOrdenacao").addEventListener("change", () => renderizarListaLeads());
   document.getElementById("filtroStatusLocal").addEventListener("change", () => renderizarListaLeads());
-  document.getElementById("selectScriptModelo").addEventListener("change", () => renderizarListaLeads());
+  document.getElementById("selectScriptModelo").addEventListener("change", () => { AppState.textosEditados = {}; renderizarListaLeads(); });
   document.getElementById("buscaPerfil").addEventListener("input", () => renderizarListaLeads());
 
   document.getElementById("btnCarregarMais").addEventListener("click", () => {
@@ -277,7 +278,13 @@ function renderizarListaLeads() {
                 : ""
             }
 
-            <div class="script-box" style="margin-top: 10px;">${scriptPronto}</div>
+            <div style="margin-top: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <small style="color: var(--text-muted); font-weight: 600;">Sugestão de mensagem (editável):</small>
+                <small style="color: var(--text-muted);">Use como base e altere como quiser</small>
+              </div>
+              <textarea class="textarea script-box" style="min-height: 96px; width: 100%;" oninput="atualizarTextoLeadEditado('${lead.id}', this.value)">${AppState.textosEditados[lead.id] ?? scriptPronto}</textarea>
+            </div>
           </div>
 
           <div>
@@ -307,6 +314,11 @@ function renderizarListaLeads() {
     .join("");
 }
 
+
+function atualizarTextoLeadEditado(leadId, novoTexto) {
+  AppState.textosEditados[leadId] = novoTexto;
+}
+
 function encontrarLead(leadId) {
   return AppState.leadsCarregados.find((l) => l.id === leadId);
 }
@@ -330,7 +342,8 @@ async function acaoCopiarScript(leadId) {
 
   const idxLead = AppState.leadsCarregados.findIndex((l) => l.id === leadId);
   const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
-  const texto = RotacaoService.renderizarScript(obterTemplateScriptSelecionado(), lead, nomeSub, Math.max(0, idxLead));
+  const padrao = RotacaoService.renderizarScript(obterTemplateScriptSelecionado(), lead, nomeSub, Math.max(0, idxLead));
+  const texto = AppState.textosEditados[leadId] ?? padrao;
 
   await navigator.clipboard.writeText(texto);
   LocalDB.registrarContato(AppState.perfil.id, lead, "copiou", nomeSub);
