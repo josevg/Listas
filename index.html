@@ -3,81 +3,713 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Clientes para Terapeutas — Pessoas que Comentam Suas Dores</title>
-  <link rel="stylesheet" href="css/styles.css" />
+  <title>Conexão Terapêutica — Encontre Clientes que Já Comentam Suas Dores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #091514;
+      --bg-dark-card: #102321;
+      --bg-light: #f6f8f7;
+      --surface: #ffffff;
+      --teal: #0d9488;
+      --teal-bright: #14b8a6;
+      --teal-soft: #ccfbf1;
+      --amber: #f59e0b;
+      --text-dark: #0f172a;
+      --text-muted: #475569;
+      --text-light: #f8fafc;
+      --text-light-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --border-dark: rgba(255, 255, 255, 0.1);
+      --max-w: 1140px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(9, 21, 20, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .navbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 72px;
+      gap: 14px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-light);
+      font-weight: 700;
+      font-size: 1.08rem;
+      letter-spacing: -0.01em;
+    }
+
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--teal-bright), #0f766e);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 14px rgba(20, 184, 166, 0.35);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.94rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+
+    .btn-ghost-light {
+      color: #e2e8f0;
+      border-color: rgba(255, 255, 255, 0.18);
+      background: transparent;
+    }
+
+    .btn-ghost-light:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .btn-primary-glow {
+      background: linear-gradient(135deg, var(--teal-bright), var(--teal));
+      color: #ffffff;
+      box-shadow: 0 8px 24px rgba(20, 184, 166, 0.32);
+    }
+
+    .btn-primary-glow:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(20, 184, 166, 0.45);
+    }
+
+    .btn-lg {
+      padding: 15px 28px;
+      font-size: 1rem;
+      border-radius: 12px;
+    }
+
+    /* HERO DARK EDITORIAL */
+    .hero-section {
+      background:
+        radial-gradient(circle at 15% 20%, rgba(20, 184, 166, 0.18), transparent 42%),
+        radial-gradient(circle at 85% 75%, rgba(245, 158, 11, 0.1), transparent 40%),
+        var(--bg-dark);
+      color: var(--text-light);
+      padding: 72px 0 84px;
+      border-bottom: 1px solid var(--border-dark);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.12fr 0.88fr;
+      gap: 44px;
+      align-items: center;
+    }
+
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(20, 184, 166, 0.14);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      color: #5eead4;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 18px;
+    }
+
+    .dot-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2dd4bf;
+      box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.22);
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(2.1rem, 4.3vw, 3.35rem);
+      line-height: 1.13;
+      font-weight: 700;
+      margin-bottom: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: #5eead4;
+    }
+
+    .hero-desc {
+      color: #cbd5e1;
+      font-size: 1.06rem;
+      line-height: 1.68;
+      margin-bottom: 28px;
+      max-width: 560px;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .hero-proof {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: var(--text-light-muted);
+    }
+
+    .hero-proof span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .check-icon {
+      color: #2dd4bf;
+      font-weight: 800;
+    }
+
+    /* RADAR VISUAL INTERATIVO */
+    .radar-card {
+      background: linear-gradient(180deg, rgba(22, 46, 43, 0.9), rgba(13, 29, 27, 0.96));
+      border: 1px solid rgba(94, 234, 212, 0.22);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .radar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .radar-title {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: #e2e8f0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .radar-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .topic-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .topic-chip.active,
+    .topic-chip:hover {
+      background: rgba(20, 184, 166, 0.22);
+      border-color: #2dd4bf;
+      color: #ffffff;
+    }
+
+    .signal-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+
+    .signal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+    }
+
+    .signal-tag {
+      background: rgba(45, 212, 191, 0.16);
+      color: #5eead4;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.74rem;
+    }
+
+    .signal-quote {
+      font-size: 0.9rem;
+      color: #f1f5f9;
+      font-style: italic;
+      margin-bottom: 8px;
+    }
+
+    .signal-foot {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* SEÇÕES CLARAS */
+    .section {
+      padding: 72px 0;
+    }
+
+    .section-center {
+      text-align: center;
+      max-width: 720px;
+      margin: 0 auto 44px;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      color: var(--teal);
+      font-weight: 800;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .heading-2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+      line-height: 1.2;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+
+    .subtext {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+    }
+
+    /* COMPARATIVO */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 22px;
+    }
+
+    .compare-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.04);
+    }
+
+    .compare-card.highlight {
+      border: 2px solid var(--teal);
+      background: linear-gradient(180deg, #ffffff 0%, #f0fdfa 100%);
+      box-shadow: 0 14px 36px rgba(13, 148, 136, 0.12);
+    }
+
+    .compare-badge {
+      display: inline-block;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .badge-old {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .badge-new {
+      background: var(--teal-soft);
+      color: #0f766e;
+    }
+
+    .compare-list {
+      list-style: none;
+      margin-top: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .compare-list li {
+      display: flex;
+      gap: 10px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* BENEFÍCIOS EM 3 PILARES */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 22px;
+    }
+
+    .pillar-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 18px;
+      padding: 28px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pillar-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 34px rgba(15, 23, 42, 0.07);
+    }
+
+    .pillar-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      color: var(--teal);
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 1.15rem;
+      margin-bottom: 16px;
+    }
+
+    .pillar-card h3 {
+      font-size: 1.14rem;
+      margin-bottom: 8px;
+      color: var(--text-dark);
+    }
+
+    .pillar-card p {
+      font-size: 0.94rem;
+      color: var(--text-muted);
+    }
+
+    /* CTA FINAL */
+    .cta-banner {
+      background: linear-gradient(135deg, #0b1f1d 0%, #113834 100%);
+      color: #fff;
+      border-radius: 24px;
+      padding: 48px 28px;
+      text-align: center;
+      box-shadow: 0 22px 50px rgba(9, 21, 20, 0.22);
+    }
+
+    .cta-banner h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+      margin-bottom: 12px;
+    }
+
+    .cta-banner p {
+      color: #cbd5e1;
+      max-width: 600px;
+      margin: 0 auto 26px;
+      font-size: 1.02rem;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border-light);
+      padding: 26px 0;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 880px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+      .hero-section {
+        padding: 48px 0 56px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="container topbar-inner">
-      <a href="#topo" class="brand">
-        <span class="brand-badge">TERAPEUTAS</span>
-        <span>Conexão por Demanda</span>
+  <header class="navbar">
+    <div class="container navbar-inner">
+      <a href="#inicio" class="logo">
+        <span class="logo-mark">CT</span>
+        <span>Conexão Terapêutica</span>
       </a>
-      <div class="topbar-actions">
-        <a href="login.html?modo=cadastro" class="btn btn-outline btn-sm">Criar conta</a>
-        <a href="login.html" class="btn btn-primary btn-sm">Entrar</a>
+      <div class="nav-actions">
+        <a href="login.html" class="btn btn-ghost-light">Entrar</a>
+        <a href="login.html?modo=cadastro" class="btn btn-primary-glow">Criar conta</a>
       </div>
     </div>
   </header>
 
-  <main id="topo" class="container page-main">
-    <section class="hero">
-      <div class="hero-inner">
-        <span class="badge badge-primary" style="margin-bottom: 12px;">
-          Para Terapeutas, Psicanalistas e Profissionais da Saúde Emocional
-        </span>
-        <h1>Atraia clientes que já estão comentando exatamente os problemas que você resolve</h1>
-        <p>
-          Chega de depender apenas de postagens soltas esperando alguém aparecer. Encontre pessoas
-          que falam sobre dores como ansiedade, depressão, sobrecarga emocional e autoestima, e inicie
-          conversas com mais direção para o seu atendimento terapêutico.
-        </p>
-        <div class="hero-cta">
-          <a href="login.html?modo=cadastro" class="btn btn-lg" style="background: #ffffff; color: #0f766e;">
-            Quero acessar agora
-          </a>
-          <a href="login.html" class="btn btn-lg btn-outline" style="color: #ffffff; border-color: rgba(255,255,255,0.45); background: transparent;">
-            Já tenho conta
-          </a>
+  <main id="inicio">
+    <!-- DOBRA PRINCIPAL -->
+    <section class="hero-section">
+      <div class="container hero-grid">
+        <div>
+          <div class="pill-tag">
+            <span class="dot-pulse"></span>
+            Para Terapeutas, Psicanalistas e Mentores Emocionais
+          </div>
+          <h1 class="hero-title">
+            Converse com pessoas que <em>já estão falando</em> sobre a dor que você ajuda a resolver
+          </h1>
+          <p class="hero-desc">
+            Pare de depender apenas do alcance orgânico esperando que alguém descubra o seu perfil.
+            Acesse perfis segmentados por demandas emocionais reais e comece diálogos humanos,
+            acolhedores e direcionados para o seu atendimento.
+          </p>
+          <div class="hero-cta-row">
+            <a href="login.html?modo=cadastro" class="btn btn-primary-glow btn-lg">
+              Quero começar agora
+            </a>
+            <a href="login.html" class="btn btn-ghost-light btn-lg">
+              Já tenho acesso
+            </a>
+          </div>
+          <div class="hero-proof">
+            <span><strong class="check-icon">✓</strong> Segmentação por dores emocionais</span>
+            <span><strong class="check-icon">✓</strong> Sugestões de abertura editáveis</span>
+            <span><strong class="check-icon">✓</strong> Organização simples de conversas</span>
+          </div>
+        </div>
+
+        <!-- PREVIEW INTERATIVO DE DEMANDAS -->
+        <div class="radar-card" aria-label="Exemplos de temas emocionais">
+          <div class="radar-header">
+            <span class="radar-title">Temas em alta na plataforma</span>
+            <span class="signal-tag">Atualização contínua</span>
+          </div>
+
+          <div class="radar-chips" id="demoChips">
+            <button type="button" class="topic-chip active" data-tema="ansiedade">Ansiedade</button>
+            <button type="button" class="topic-chip" data-tema="depressao">Desânimo & Depressão</button>
+            <button type="button" class="topic-chip" data-tema="sobrecarga">Sobrecarga</button>
+            <button type="button" class="topic-chip" data-tema="autoestima">Autoestima</button>
+          </div>
+
+          <div id="demoPreviewArea">
+            <div class="signal-item">
+              <div class="signal-top">
+                <strong style="color: #fff;">Demanda identificada: Ansiedade</strong>
+                <span class="signal-tag">Alta aderência</span>
+              </div>
+              <p class="signal-quote">
+                "Sinto o coração acelerar do nada e a mente não desliga nem na hora de dormir..."
+              </p>
+              <div class="signal-foot">
+                <span>Abertura acolhedora pronta para adaptar</span>
+                <span style="color: #5eead4;">Pronto para conversar →</span>
+              </div>
+            </div>
+
+            <div class="signal-item" style="margin-bottom: 0;">
+              <div class="signal-top">
+                <strong style="color: #fff;">Como você conduz</strong>
+                <span class="signal-tag">100% humano</span>
+              </div>
+              <p style="font-size: 0.87rem; color: #cbd5e1;">
+                Você escolhe o tema da sua especialidade, adapta a mensagem ao seu estilo e inicia uma conversa genuína com quem precisa de apoio.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="card" style="margin-top: 24px;">
-      <h2 class="section-title">Por que falar com quem já comenta o problema muda o jogo</h2>
-      <p class="section-subtitle">
-        Quando a dor já está presente na rotina da pessoa, a conversa faz muito mais sentido desde o primeiro contato:
-      </p>
+    <!-- ANTES VS DEPOIS -->
+    <section class="section">
+      <div class="container">
+        <div class="section-center">
+          <span class="eyebrow">Mudança de postura</span>
+          <h2 class="heading-2">Por que esperar o cliente chegar sozinho custa tão caro</h2>
+          <p class="subtext">
+            Quando você vai ao encontro de quem já expressa o problema, a conversa começa com contexto e receptividade.
+          </p>
+        </div>
 
-      <div class="features-grid">
-        <div class="safety-box">
-          <strong>Foco na dor real do momento</strong>
-          Localize perfis associados a temas específicos como ansiedade, depressão, esgotamento emocional,
-          autoestima e perdas — exatamente onde entra a sua escuta terapêutica.
-        </div>
-        <div class="safety-box">
-          <strong>Mais relevância na abertura</strong>
-          Em vez de mensagens genéricas, você aborda a pessoa a partir do assunto que ela já demonstra
-          viver, tornando o diálogo mais natural e humano.
-        </div>
-        <div class="safety-box">
-          <strong>Mais clareza para preencher agenda</strong>
-          Transforme interações pontuais em conversas qualificadas com quem busca alívio, acolhimento
-          e acompanhamento emocional.
+        <div class="compare-grid">
+          <div class="compare-card">
+            <span class="compare-badge badge-old">Modelo tradicional</span>
+            <h3 style="font-size: 1.18rem;">Postar todos os dias e torcer por mensagens</h3>
+            <ul class="compare-list">
+              <li><span>✕</span><span>Horas criando conteúdo sem saber quem realmente precisa de ajuda agora.</span></li>
+              <li><span>✕</span><span>Dependência total do algoritmo para entregar seus posts.</span></li>
+              <li><span>✕</span><span>Agenda oscilando entre semanas cheias e semanas vazias.</span></li>
+            </ul>
+          </div>
+
+          <div class="compare-card highlight">
+            <span class="compare-badge badge-new">Com a Conexão Terapêutica</span>
+            <h3 style="font-size: 1.18rem;">Diálogo direto com quem já vive a dor emocional</h3>
+            <ul class="compare-list">
+              <li><span>✓</span><span>Filtre por subtemas específicos como ansiedade, esgotamento, autoestima e perdas.</span></li>
+              <li><span>✓</span><span>Use modelos de abertura acolhedores e personalize cada palavra ao seu jeito.</span></li>
+              <li><span>✓</span><span>Acompanhe quem respondeu e quem demonstrou interesse em atendimento.</span></li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="card" style="text-align: center;">
-      <h2 class="section-title">Comece a conversar com quem precisa do seu acompanhamento</h2>
-      <p class="section-subtitle">
-        Crie sua conta em poucos segundos ou entre com seu acesso para começar.
-      </p>
-      <div class="hero-cta">
-        <a href="login.html?modo=cadastro" class="btn btn-primary btn-lg">Criar conta</a>
-        <a href="login.html" class="btn btn-outline btn-lg">Entrar</a>
+    <!-- 3 PILARES -->
+    <section class="section" style="padding-top: 0;">
+      <div class="container">
+        <div class="section-center">
+          <span class="eyebrow">Feito para a rotina do terapeuta</span>
+          <h2 class="heading-2">Simples, leve e pensado para gerar conversas reais</h2>
+        </div>
+
+        <div class="pillars-grid">
+          <div class="pillar-card">
+            <div class="pillar-icon">01</div>
+            <h3>Escolha a dor que você atende</h3>
+            <p>
+              Navegue por categorias e subcategorias organizadas para encontrar pessoas alinhadas com a sua abordagem terapêutica.
+            </p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">02</div>
+            <h3>Personalize sua abordagem</h3>
+            <p>
+              Conte com sugestões variadas de mensagens iniciais para quebrar o gelo com empatia — editáveis livremente antes do envio.
+            </p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">03</div>
+            <h3>Organize suas respostas</h3>
+            <p>
+              Registre facilmente com quem você já falou e destaque os contatos que responderam e querem saber mais sobre o seu trabalho.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="section" style="padding-top: 10px;">
+      <div class="container">
+        <div class="cta-banner">
+          <h2>Pronto para transformar conversas em novos atendimentos?</h2>
+          <p>
+            Crie sua conta gratuitamente em menos de um minuto ou entre agora no seu painel para começar.
+          </p>
+          <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="login.html?modo=cadastro" class="btn btn-primary-glow btn-lg">Criar minha conta</a>
+            <a href="login.html" class="btn btn-ghost-light btn-lg">Entrar no painel</a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
+
+  <footer class="footer">
+    <div class="container">
+      Conexão Terapêutica — Plataforma de apoio à prospecção ética para profissionais da saúde emocional.
+    </div>
+  </footer>
+
+  <script>
+    const exemplosTemas = {
+      ansiedade: {
+        titulo: "Demanda identificada: Ansiedade",
+        frase: '"Sinto o coração acelerar do nada e a mente não desliga nem na hora de dormir..."'
+      },
+      depressao: {
+        titulo: "Demanda identificada: Desânimo & Depressão",
+        frase: '"Acordo sem energia para tarefas simples e parece que ninguém ao redor entende esse peso..."'
+      },
+      sobrecarga: {
+        titulo: "Demanda identificada: Sobrecarga Emocional",
+        frase: '"Estou sempre cuidando de tudo e de todos, mas por dentro sinto que cheguei no limite..."'
+      },
+      autoestima: {
+        titulo: "Demanda identificada: Autoestima & Insegurança",
+        frase: '"Tenho muita dificuldade de me posicionar e vivo me cobrando por qualquer pequeno erro..."'
+      }
+    };
+
+    document.querySelectorAll("#demoChips .topic-chip").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#demoChips .topic-chip").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        const item = exemplosTemas[btn.dataset.tema];
+        if (!item) return;
+        const area = document.getElementById("demoPreviewArea");
+        area.querySelector(".signal-top strong").textContent = item.titulo;
+        area.querySelector(".signal-quote").textContent = item.frase;
+      });
+    });
+  </script>
 </body>
 </html>
