@@ -156,12 +156,13 @@ function atualizarSelectScripts() {
   const listaFinal = disponiveis.length ? disponiveis : AppState.scripts;
   const selScript = document.getElementById("selectScriptModelo");
 
+  const opcoesVariacao = `<option value="__30_VARIACOES__">Rotação automática (30 mensagens diferentes sem link)</option>`;
   if (!listaFinal.length) {
-    selScript.innerHTML = `<option value="">Script padrão de acolhimento</option>`;
+    selScript.innerHTML = `${opcoesVariacao}<option value="">Script padrão de acolhimento</option>`;
     return;
   }
 
-  selScript.innerHTML = listaFinal
+  selScript.innerHTML = `${opcoesVariacao}` + listaFinal
     .map((sc) => `<option value="${sc.id}">${sc.titulo}</option>`)
     .join("");
 }
@@ -200,11 +201,11 @@ function obterNomeSubcategoria(subId) {
 
 function obterTemplateScriptSelecionado() {
   const scriptId = document.getElementById("selectScriptModelo").value;
+  if (!scriptId || scriptId === "__30_VARIACOES__") {
+    return "{{variacao_30}}";
+  }
   const encontrado = AppState.scripts.find((s) => s.id === scriptId);
-  return (
-    encontrado?.mensagem ||
-    "{{saudacao}}, {{primeiro_nome}}! Tudo bem? Vi um comentário seu sobre {{subcategoria}} e senti vontade de te perguntar: como você tem lidado com isso no seu dia a dia?"
-  );
+  return encontrado?.mensagem || "{{variacao_30}}";
 }
 
 function renderizarListaLeads() {
@@ -245,9 +246,9 @@ function renderizarListaLeads() {
   const template = obterTemplateScriptSelecionado();
 
   container.innerHTML = visiveis
-    .map((lead) => {
+    .map((lead, idx) => {
       const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
-      const scriptPronto = RotacaoService.renderizarScript(template, lead, nomeSub);
+      const scriptPronto = RotacaoService.renderizarScript(template, lead, nomeSub, idx);
       const jaContatado = Boolean(dadosLocais.contatados[lead.id]);
       const jaEngajado = dadosLocais.engajados[lead.id];
       const urlIg = `https://www.instagram.com/${lead.username.replace(/^@/, "")}/`;
@@ -327,8 +328,9 @@ async function acaoCopiarScript(leadId) {
   const lead = encontrarLead(leadId);
   if (!lead) return;
 
+  const idxLead = AppState.leadsCarregados.findIndex((l) => l.id === leadId);
   const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
-  const texto = RotacaoService.renderizarScript(obterTemplateScriptSelecionado(), lead, nomeSub);
+  const texto = RotacaoService.renderizarScript(obterTemplateScriptSelecionado(), lead, nomeSub, Math.max(0, idxLead));
 
   await navigator.clipboard.writeText(texto);
   LocalDB.registrarContato(AppState.perfil.id, lead, "copiou", nomeSub);
