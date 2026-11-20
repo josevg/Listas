@@ -410,23 +410,62 @@ function renderizarAbaContatados() {
         <tbody>
           ${itens
             .map(
-              (item) => `
-            <tr>
-              <td><strong>@${item.username.replace(/^@/, "")}</strong><br><small>${item.nome || ""}</small></td>
-              <td>${item.subcategoria || "-"}</td>
-              <td>${new Date(item.data).toLocaleDateString("pt-BR")}</td>
-              <td>${item.nota || "-"}</td>
-              <td>
-                <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Abrir IG</a>
-              </td>
-            </tr>
-          `
+              (item) => {
+                const engajado = dados.engajados?.[item.id];
+                const leadRef = {
+                  id: item.id,
+                  username: item.username,
+                  nome_exibicao: item.nome || item.username
+                };
+                const leadJsonEnc = encodeURIComponent(JSON.stringify(leadRef));
+                const subEnc = encodeURIComponent(item.subcategoria || "");
+
+                return `
+                  <tr>
+                    <td>
+                      <strong>@${item.username.replace(/^@/, "")}</strong><br>
+                      <small>${item.nome || ""}</small>
+                      ${engajado ? `<br><span class="badge badge-warning" style="margin-top: 4px;">Engajado (${engajado.status})</span>` : ""}
+                    </td>
+                    <td>${item.subcategoria || "-"}</td>
+                    <td>${new Date(item.data).toLocaleDateString("pt-BR")}</td>
+                    <td>${item.nota || "-"}</td>
+                    <td>
+                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Abrir IG</a>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="marcarContatadoComoEngajado('${leadJsonEnc}', '${subEnc}')">
+                          ${engajado ? "Atualizar Engajado" : "+ Engajado"}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              }
             )
             .join("")}
         </tbody>
       </table>
     </div>
   `;
+}
+
+function marcarContatadoComoEngajado(leadJsonEnc, subEnc) {
+  const lead = JSON.parse(decodeURIComponent(leadJsonEnc));
+  const nomeSub = decodeURIComponent(subEnc);
+  const dadosAtuais = LocalDB.carregarDados(AppState.perfil.id);
+  const notaAnterior = dadosAtuais.engajados?.[lead.id]?.nota ?? dadosAtuais.contatados?.[lead.id]?.nota ?? "";
+  const nota = prompt("Anotação rápida sobre essa pessoa (opcional):", notaAnterior) ?? notaAnterior;
+
+  const dados = LocalDB.salvarEngajado(AppState.perfil.id, lead, "respondeu", nomeSub, nota);
+  atualizarResumoSuperior();
+  renderizarAbaContatados();
+  if (AppState.abaAtual === "engajados") {
+    renderizarAbaEngajados();
+  }
+  registrarMetricaSilenciosa({
+    engajados: Object.keys(dados.engajados).length,
+    categoria: nomeSub || null
+  });
 }
 
 function renderizarAbaEngajados() {
