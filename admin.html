@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Admin — Mapa de Conversas</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="admin.html" class="brand">
+        <span class="brand-badge">ADMIN</span>
+        <span>Gestão & Relatórios</span>
+      </a>
+      <div class="topbar-actions">
+        <span id="infoAdminTop" class="user-pill">Carregando...</span>
+        <a href="app.html" class="btn btn-outline btn-sm">Ver Painel Terapeuta</a>
+        <button type="button" id="btnSairAdmin" class="btn btn-ghost btn-sm">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container page-main">
+    <div id="alertaAdmin" class="alert hidden"></div>
+
+    <!-- CARDS DE VISÃO GERAL -->
+    <section class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Terapeutas Cadastrados</div>
+        <div id="admTotalUsuarios" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Acessos Ativos Hoje</div>
+        <div id="admAtivosHoje" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Perfis Ativos na Base</div>
+        <div id="admTotalPerfis" class="stat-value">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Scripts Copiados (Total)</div>
+        <div id="admTotalCopiados" class="stat-value">0</div>
+      </div>
+    </section>
+
+    <!-- ABAS DO ADMIN -->
+    <div class="tabs">
+      <button type="button" class="tab-btn active" data-admtab="terapeutas">Terapeutas & Datas</button>
+      <button type="button" class="tab-btn" data-admtab="categorias">Categorias & Subcategorias</button>
+      <button type="button" class="tab-btn" data-admtab="perfis">Cadastrar / Importar Perfis</button>
+      <button type="button" class="tab-btn" data-admtab="scripts">Scripts Iniciais</button>
+      <button type="button" class="tab-btn" data-admtab="relatorios">Relatórios por Terapeuta</button>
+    </div>
+
+    <!-- ABA 1: TERAPEUTAS, ATIVAÇÃO E DATAS -->
+    <section id="admAbaTerapeutas">
+      <div class="card">
+        <h1 class="section-title">Controle de Terapeutas, Validade por Data e Grupos de Rotação</h1>
+        <p class="section-subtitle">
+          Ative ou desative clientes manualmente, defina data de início e expiração, ajuste o grupo (10 em 10 terapeutas) e salve.
+        </p>
+        <div id="tabelaTerapeutasContainer"></div>
+      </div>
+    </section>
+
+    <!-- ABA 2: CATEGORIAS PRINCIPAIS E SUBCATEGORIAS -->
+    <section id="admAbaCategorias" class="hidden">
+      <div class="features-grid" style="margin-top: 0; margin-bottom: 18px;">
+        <form id="formNovaCategoriaPrincipal" class="card" style="margin-top: 0;">
+          <h2 class="section-title">Nova Categoria Principal</h2>
+          <p class="section-subtitle">Ex.: Emocional, Relacionamentos, Carreira...</p>
+          <div class="field" style="margin-bottom: 10px;">
+            <label for="catPrincipalNome">Nome da Categoria Principal</label>
+            <input id="catPrincipalNome" type="text" class="input" required placeholder="Ex.: Emocional" />
+          </div>
+          <div class="field" style="margin-bottom: 12px;">
+            <label for="catPrincipalOrdem">Ordem de exibição</label>
+            <input id="catPrincipalOrdem" type="number" class="input" value="1" min="1" />
+          </div>
+          <button type="submit" class="btn btn-primary">Adicionar Categoria Principal</button>
+        </form>
+
+        <form id="formNovaSubcategoria" class="card" style="margin-top: 0;">
+          <h2 class="section-title">Nova Subcategoria</h2>
+          <p class="section-subtitle">Vincule temas específicos a uma categoria principal.</p>
+          <div class="field" style="margin-bottom: 10px;">
+            <label for="subCatPrincipalSelect">Categoria Principal</label>
+            <select id="subCatPrincipalSelect" class="select" required></select>
+          </div>
+          <div class="field" style="margin-bottom: 10px;">
+            <label for="subCatNome">Nome da Subcategoria</label>
+            <input id="subCatNome" type="text" class="input" required placeholder="Ex.: Ansiedade, Depressão, Insônia..." />
+          </div>
+          <div class="field" style="margin-bottom: 12px;">
+            <label for="subCatOrdem">Ordem de exibição</label>
+            <input id="subCatOrdem" type="number" class="input" value="1" min="1" />
+          </div>
+          <button type="submit" class="btn btn-primary">Adicionar Subcategoria</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="section-title">Estrutura Atual de Categorias e Subcategorias</h2>
+        <div id="listaCategoriasAdmin"></div>
+      </div>
+    </section>
+
+    <!-- ABA 3: CADASTRAR / IMPORTAR PERFIS EM LOTE -->
+    <section id="admAbaPerfis" class="hidden">
+      <form id="formImportarPerfis" class="card">
+        <h2 class="section-title">Cadastrar / Importar Perfis do Instagram em Lote</h2>
+        <p class="section-subtitle">
+          Cole um perfil por linha no formato: <code>@usuario | Nome (opcional) | Contexto do comentário (opcional) | Score (0-100)</code>.
+          O sistema distribui automaticamente os perfis entre os blocos <strong>A, B, C e D</strong> para a rotatividade.
+        </p>
+
+        <div class="filters-bar">
+          <div class="field">
+            <label for="importCatPrincipal">Categoria Principal</label>
+            <select id="importCatPrincipal" class="select" required></select>
+          </div>
+          <div class="field">
+            <label for="importSubcategoria">Subcategoria</label>
+            <select id="importSubcategoria" class="select" required></select>
+          </div>
+          <div class="field">
+            <label for="importScorePadrao">Engajamento padrão (se não informar)</label>
+            <input id="importScorePadrao" type="number" class="input" value="70" min="1" max="100" />
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom: 14px;">
+          <label for="importListaLinhas">Lista de perfis (um por linha)</label>
+          <textarea id="importListaLinhas" class="textarea" style="min-height: 160px;" required placeholder="@maria.silva | Maria Silva | Comentou que precisa controlar a ansiedade | 85
+@joao_lima | João Lima | Falou sobre desânimo e cansaço constante | 75"></textarea>
+        </div>
+
+        <button type="submit" id="btnSalvarPerfis" class="btn btn-primary">
+          Importar e distribuir perfis nos blocos
+        </button>
+      </form>
+    </section>
+
+    <!-- ABA 4: SCRIPTS INICIAIS (SEM LINK) -->
+    <section id="admAbaScripts" class="hidden">
+      <form id="formNovoScript" class="card">
+        <h2 class="section-title">Novo Script Inicial (Sem Link)</h2>
+        <p class="section-subtitle">
+          Variáveis disponíveis: <code>{{saudacao}}</code>, <code>{{primeiro_nome}}</code> e <code>{{subcategoria}}</code>.
+          Evite links na primeira mensagem para proteger o perfil do terapeuta.
+        </p>
+
+        <div class="filters-bar">
+          <div class="field">
+            <label for="scriptCatPrincipal">Categoria Principal</label>
+            <select id="scriptCatPrincipal" class="select"></select>
+          </div>
+          <div class="field">
+            <label for="scriptSubcategoria">Subcategoria (opcional)</label>
+            <select id="scriptSubcategoria" class="select"></select>
+          </div>
+          <div class="field">
+            <label for="scriptTitulo">Título do Script</label>
+            <input id="scriptTitulo" type="text" class="input" required placeholder="Ex.: Pergunta leve sobre ansiedade" />
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom: 12px;">
+          <label for="scriptMensagem">Mensagem inicial (com pergunta aberta, sem link)</label>
+          <textarea id="scriptMensagem" class="textarea" required placeholder="{{saudacao}}, {{primeiro_nome}}! Vi seu comentário sobre {{subcategoria}}..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salvar Script</button>
+      </form>
+
+      <div class="card">
+        <h2 class="section-title">Scripts Cadastrados</h2>
+        <div id="listaScriptsAdmin"></div>
+      </div>
+    </section>
+
+    <!-- ABA 5: RELATÓRIOS POR TERAPEUTA -->
+    <section id="admAbaRelatorios" class="hidden">
+      <div class="card">
+        <h2 class="section-title">Relatório Consolidado por Terapeuta</h2>
+        <p class="section-subtitle">
+          Acompanhe o uso de cada terapeuta (scripts copiados, perfis abertos, engajados salvos, tema principal e último acesso).
+        </p>
+        <div id="tabelaRelatoriosContainer"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rotacao.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
