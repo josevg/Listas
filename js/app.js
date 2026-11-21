@@ -236,7 +236,7 @@ function renderizarListaLeads() {
         <div class="lead-card">
           <div class="lead-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
             <div>
-              <h3 class="lead-username">@${lead.username.replace(/^@/, "")}</h3>
+              <h3 class="lead-username">@${(lead.username || "").replace(/^@/, "")}</h3>
               <p class="lead-name">${lead.nome_exibicao || ""}</p>
             </div>
           </div>
