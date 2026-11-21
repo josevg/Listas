@@ -73,7 +73,7 @@ function configurarAbasAdmin() {
 }
 
 async function carregarTudoAdmin() {
-  const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfisCount, resPerfisLista] = await Promise.all([
+  const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfisLista] = await Promise.all([
     supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: false }),
     supabaseClient.from("categorias_principais").select("*").order("ordem"),
     supabaseClient.from("subcategorias").select("*").order("ordem"),
@@ -88,7 +88,7 @@ async function carregarTudoAdmin() {
   AdminState.scripts = resScripts.data || [];
   AdminState.metricas = resMetricas.data || [];
   AdminState.perfisAdmin = resPerfisLista.data || [];
-  AdminState.totalPerfisAtivos = typeof resPerfisCount.count === 'number' ? resPerfisCount.count : AdminState.perfisAdmin.length;
+  AdminState.totalPerfisAtivos = AdminState.perfisAdmin.length;
 
   atualizarCardsTopoAdmin();
   popularSelectsCategoriasAdmin();
@@ -114,9 +114,9 @@ function popularSelectsCategoriasAdmin() {
   const cats = AdminState.categoriasPrincipais;
   const optionsCats = cats.map((c) => `<option value="${c.id}">${c.nome}</option>`).join("");
 
-  document.getElementById("subCatPrincipalSelect").innerHTML = optionsCats;
-  document.getElementById("importCatPrincipal").innerHTML = optionsCats;
-  document.getElementById("scriptCatPrincipal").innerHTML = `<option value="">Todas as categorias principais</option>${optionsCats}`;
+  (document.getElementById("subCatPrincipalSelect") || {}).innerHTML = optionsCats;
+  (document.getElementById("importCatPrincipal") || {}).innerHTML = optionsCats;
+  (document.getElementById("scriptCatPrincipal") || {}).innerHTML = `<option value="">Todas as categorias principais</option>${optionsCats}`;
 
   sincronizarSubcategoriasSelect("importCatPrincipal", "importSubcategoria", false);
   sincronizarSubcategoriasSelect("scriptCatPrincipal", "scriptSubcategoria", true);
