@@ -72,37 +72,74 @@ function configurarAbasAdmin() {
   });
 }
 
-async function carregarTudoAdmin() {
-  /* SAFE_ADMIN_LOAD */
-  const safeQuery = async (promiseFn, fallbackData = []) => {
-    try {
-      const res = await promiseFn();
-      if (res && res.error) {
-        console.warn("Aviso consulta Admin:", res.error.message || res.error);
-      }
-      return res || { data: fallbackData, count: null };
-    } catch (err) {
-      console.warn("Erro consulta Admin:", err);
-      return { data: fallbackData, count: null };
-    }
-  };
 
-  const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfisLista] = await Promise.all([
-    safeQuery(() => supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: false })),
-    safeQuery(() => supabaseClient.from("categorias_principais").select("*").order("ordem")),
-    safeQuery(() => supabaseClient.from("subcategorias").select("*").order("ordem")),
-    safeQuery(() => supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false })),
-    safeQuery(() => supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false })),
-    supabaseClient.from("perfis_leads").select("*").order("criado_em", { ascending: false }).range(0, 4999)
+async function buscarTodosPerfisAdmin() {
+  const tamanhoPagina = 1000;
+  let countExato = null;
+
+  const resCount = await supabaseClient
+    .from("perfis_leads")
+    .select("id", { count: "exact", head: true });
+
+  if (resCount && typeof resCount.count === "number") {
+    countExato = resCount.count;
+  }
+
+  let todos = [];
+  let offset = 0;
+
+  while (true) {
+    const { data, error } = await supabaseClient
+      .from("perfis_leads")
+      .select("*")
+      .order("criado_em", { ascending: false })
+      .range(offset, offset + tamanhoPagina - 1);
+
+    if (error) {
+      console.error("Erro ao buscar perfis_leads:", error);
+      break;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      break;
+    }
+
+    todos = todos.concat(data);
+    if (data.length < tamanhoPagina) {
+      break;
+    }
+    offset += tamanhoPagina;
+  }
+
+  return {
+    lista: todos,
+    total: typeof countExato === "number" ? countExato : todos.length
+  };
+}
+
+async function carregarTudoAdmin() {
+  const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfis] = await Promise.all([
+    supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: false }),
+    supabaseClient.from("categorias_principais").select("*").order("ordem"),
+    supabaseClient.from("subcategorias").select("*").order("ordem"),
+    supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false }),
+    supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false }),
+    buscarTodosPerfisAdmin()
   ]);
 
-  AdminState.usuarios = resUsers.data || [];
-  AdminState.categoriasPrincipais = resCat.data || [];
-  AdminState.subcategorias = resSub.data || [];
-  AdminState.scripts = resScripts.data || [];
-  AdminState.metricas = resMetricas.data || [];
-  AdminState.perfisAdmin = (resPerfis && Array.isArray(resPerfis.lista)) ? resPerfis.lista : [];
-  AdminState.totalPerfisAtivos = (resPerfis && typeof resPerfis.total === 'number') ? resPerfis.total : AdminState.perfisAdmin.length;
+  if (resUsers?.error) console.error("Erro usuarios:", resUsers.error);
+  if (resCat?.error) console.error("Erro categorias:", resCat.error);
+  if (resSub?.error) console.error("Erro subcategorias:", resSub.error);
+  if (resScripts?.error) console.error("Erro scripts:", resScripts.error);
+  if (resMetricas?.error) console.error("Erro metricas:", resMetricas.error);
+
+  AdminState.usuarios = Array.isArray(resUsers?.data) ? resUsers.data : [];
+  AdminState.categoriasPrincipais = Array.isArray(resCat?.data) ? resCat.data : [];
+  AdminState.subcategorias = Array.isArray(resSub?.data) ? resSub.data : [];
+  AdminState.scripts = Array.isArray(resScripts?.data) ? resScripts.data : [];
+  AdminState.metricas = Array.isArray(resMetricas?.data) ? resMetricas.data : [];
+  AdminState.perfisAdmin = Array.isArray(resPerfis?.lista) ? resPerfis.lista : [];
+  AdminState.totalPerfisAtivos =
+    typeof resPerfis?.total === "number" ? resPerfis.total : AdminState.perfisAdmin.length;
 
   atualizarCardsTopoAdmin();
   popularSelectsCategoriasAdmin();
@@ -635,42 +672,3 @@ async function excluirListaCompletaAdmin() {
 }
 
 
-async function buscarTodosPerfisAdmin() {
-  const tamanhoPagina = 1000;
-  let countExato = null;
-
-  try {
-    const resCount = await supabaseClient
-      .from("perfis_leads")
-      .select("id", { count: "exact", head: true });
-    if (resCount && typeof resCount.count === "number") {
-      countExato = resCount.count;
-    }
-  } catch (_) {}
-
-  let todos = [];
-  let offset = 0;
-
-  while (true) {
-    const { data, error } = await supabaseClient
-      .from("perfis_leads")
-      .select("*")
-      .order("criado_em", { ascending: false })
-      .range(offset, offset + tamanhoPagina - 1);
-
-    if (error || !Array.isArray(data) || data.length === 0) {
-      break;
-    }
-
-    todos = todos.concat(data);
-    if (data.length < tamanhoPagina) {
-      break;
-    }
-    offset += tamanhoPagina;
-  }
-
-  return {
-    lista: todos,
-    total: typeof countExato === "number" ? countExato : todos.length
-  };
-}
