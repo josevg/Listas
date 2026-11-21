@@ -214,88 +214,58 @@ function obterTemplateScriptSelecionado() {
 
 function renderizarListaLeads() {
   const container = document.getElementById("listaLeadsContainer");
+  if (!container) return;
+
+  const template = obterTemplateScriptSelecionado();
   const dadosLocais = LocalDB.carregarDados(AppState.perfil.id);
-  const modoOrdenacao = document.getElementById("filtroOrdenacao").value;
-  const filtroStatus = document.getElementById("filtroStatusLocal").value;
-  const termoBusca = document.getElementById("buscaPerfil").value.trim().toLowerCase();
+  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !dadosLocais.contatados[l.id]);
 
-  let lista = AppState.leadsCarregados.filter((lead) => !dadosLocais.descartados[lead.id]);
-
-  if (filtroStatus === "nao_contatados") {
-    lista = lista.filter((lead) => !dadosLocais.contatados[lead.id]);
-  }
-
-  if (termoBusca) {
-    lista = lista.filter(
-      (lead) =>
-        (lead.username || "").toLowerCase().includes(termoBusca) ||
-        (lead.nome_exibicao || "").toLowerCase().includes(termoBusca) ||
-        (lead.contexto_comentario || "").toLowerCase().includes(termoBusca)
-    );
-  }
-
-  lista = RotacaoService.ordenarLeadsPorGrupo(lista, AppState.perfil.grupo_rotacao, modoOrdenacao);
-
-  const totalFiltrado = lista.length;
-  const visiveis = lista.slice(0, AppState.limiteExibicao);
-
-  const btnMais = document.getElementById("btnCarregarMais");
-  btnMais.classList.toggle("hidden", totalFiltrado <= AppState.limiteExibicao);
-
-  if (!visiveis.length) {
-    container.innerHTML = `<div class="empty-state card" style="grid-column: 1 / -1;">Nenhum perfil encontrado para os filtros selecionados.</div>`;
+  if (!leadsDisponiveis.length) {
+    container.innerHTML = `<div class="empty-state">Nenhum perfil disponível neste filtro no momento. Tente outra subcategoria ou verifique a aba <strong>Já Contatados</strong>.</div>`;
     return;
   }
 
-  const template = obterTemplateScriptSelecionado();
-
-  container.innerHTML = visiveis
+  container.innerHTML = leadsDisponiveis
     .map((lead, idx) => {
       const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
       const scriptPronto = RotacaoService.renderizarScript(template, lead, nomeSub, idx);
-      const jaContatado = Boolean(dadosLocais.contatados[lead.id]);
-      const jaEngajado = dadosLocais.engajados[lead.id];
-      const urlIg = `https://www.instagram.com/${lead.username.replace(/^@/, "")}/`;
+      const textoAtual = AppState.textosEditados[lead.id] ?? scriptPronto;
 
       return `
-        <article class="lead-card ${jaContatado ? "is-contacted" : ""}" data-lead-id="${lead.id}">
-          <div>
-            <div class="lead-header">
-              <div>
-                <div class="lead-handle">@${lead.username.replace(/^@/, "")}</div>
-                <div class="lead-sub">${lead.nome_exibicao || "Perfil do Instagram"}</div>
-              </div>
-              
-            </div>
-
-            <div class="lead-meta">
-              <span class="badge badge-neutral">${nomeSub}</span>
-              <span class="badge badge-neutral">Engajamento: ${lead.score_engajamento}</span>
-              ${jaContatado ? `<span class="badge badge-success">Contatado</span>` : ""}
-              ${jaEngajado ? `<span class="badge badge-warning">Engajado (${jaEngajado.status})</span>` : ""}
-            </div>
-
-            ${
-              lead.contexto_comentario
-                ? `<div class="lead-context" style="margin-top: 10px;"><strong>Contexto:</strong> ${lead.contexto_comentario}</div>`
-                : ""
-            }
-
-            <div style="margin-top: 10px;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                <small style="color: var(--text-muted); font-weight: 600;">Sugestão de mensagem (editável):</small>
-                <small style="color: var(--text-muted);">Use como base e altere como quiser</small>
-              </div>
-              <textarea class="textarea script-box" style="min-height: 96px; width: 100%;" oninput="atualizarTextoLeadEditado('${lead.id}', this.value)">${AppState.textosEditados[lead.id] ?? scriptPronto}</textarea>
+        <div class="lead-card">
+          <div class="lead-card-header">
+            <div>
+              <h3 class="lead-username">@${lead.username.replace(/^@/, "")}</h3>
+              <p class="lead-name">${lead.nome_exibicao || ""}</p>
             </div>
           </div>
 
-          <div>
-            <div class="lead-actions">
-              
-            </div>
+          <div class="lead-badges">
+            <span class="badge badge-neutral">${nomeSub || "Geral"}</span>
+            <span class="badge badge-neutral">Engajamento: ${lead.score_engajamento || 100}</span>
           </div>
-        </article>
+
+          <div style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; gap: 8px;">
+              <small style="color: var(--text-muted); font-weight: 600;">Sugestão de mensagem (editável):</small>
+              <small style="color: var(--text-muted);">Use como base e altere como quiser</small>
+            </div>
+            <textarea class="textarea script-box" style="min-height: 96px; width: 100%;" oninput="atualizarTextoLeadEditado('${lead.id}', this.value)">${textoAtual}</textarea>
+          </div>
+
+          <div class="lead-actions" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="copiarScriptLead('${lead.id}')">
+              Copiar Mensagem
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="abrirPerfilLead('${lead.id}')">
+              Ver perfil
+            </button>
+          </div>
+
+          <small style="display: block; margin-top: 8px; color: var(--text-muted);">
+            Ao clicar em <strong>Ver perfil</strong>, este contato vai automaticamente para <strong>Já Contatados</strong>.
+          </small>
+        </div>
       `;
     })
     .join("");
@@ -516,7 +486,7 @@ function renderizarAbaEngajados() {
               </td>
               <td>${item.nota || "-"}</td>
               <td style="display: flex; gap: 6px;">
-                <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-accent btn-sm">Abrir IG</a>
+                <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-accent btn-sm">Ver perfil</a>
                 <button type="button" class="btn btn-ghost btn-sm" onclick="removerDaListaEngajados('${item.id}')">Remover</button>
               </td>
             </tr>
