@@ -73,12 +73,26 @@ function configurarAbasAdmin() {
 }
 
 async function carregarTudoAdmin() {
+  /* SAFE_ADMIN_LOAD */
+  const safeQuery = async (promiseFn, fallbackData = []) => {
+    try {
+      const res = await promiseFn();
+      if (res && res.error) {
+        console.warn("Aviso consulta Admin:", res.error.message || res.error);
+      }
+      return res || { data: fallbackData, count: null };
+    } catch (err) {
+      console.warn("Erro consulta Admin:", err);
+      return { data: fallbackData, count: null };
+    }
+  };
+
   const [resUsers, resCat, resSub, resScripts, resMetricas, resPerfisLista] = await Promise.all([
-    supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: false }),
-    supabaseClient.from("categorias_principais").select("*").order("ordem"),
-    supabaseClient.from("subcategorias").select("*").order("ordem"),
-    supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false }),
-    supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false }),
+    safeQuery(() => supabaseClient.from("usuarios").select("*").order("criado_em", { ascending: false })),
+    safeQuery(() => supabaseClient.from("categorias_principais").select("*").order("ordem")),
+    safeQuery(() => supabaseClient.from("subcategorias").select("*").order("ordem")),
+    safeQuery(() => supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false })),
+    safeQuery(() => supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false })),
     supabaseClient.from("perfis_leads").select("*").order("criado_em", { ascending: false }).range(0, 4999)
   ]);
 
