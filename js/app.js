@@ -238,9 +238,6 @@ function renderizarListaLeads() {
               <h3 class="lead-username">@${lead.username.replace(/^@/, "")}</h3>
               <p class="lead-name">${lead.nome_exibicao || ""}</p>
             </div>
-            <button type="button" class="btn btn-primary btn-sm" onclick="abrirPerfilLead('${lead.id}')">
-              Ver perfil
-            </button>
           </div>
 
           <div class="lead-badges">
@@ -648,27 +645,27 @@ async function copiarScriptLead(leadId) {
   alert("Mensagem copiada! Agora clique em Acessar Perfil para abrir e enviar.");
 }
 
-function abrirPerfilLead(leadId) {
+function abrirPerfilLead(leadId, btnEl) {
   const lead = encontrarLead(leadId);
   if (!lead) return;
 
   const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
   const usernameLimpo = (lead.username || "").replace(/^@/, "");
 
-  // Remove imediatamente o elemento do cartão na tela para resposta instantânea
-  const btnClicado = document.querySelector(`button[onclick*="abrirPerfilLead('${leadId}')"]`);
-  const cardEl = btnClicado ? btnClicado.closest(".lead-card") : null;
+  // Remoção instantânea na tela antes de abrir nova aba
+  const cardEl = btnEl
+    ? btnEl.closest(".lead-card")
+    : document.querySelector(`.lead-card button[onclick*="${leadId}"]`)?.closest(".lead-card");
   if (cardEl) {
     cardEl.remove();
   }
 
-  // Atualiza estado e persistência local
+  // Atualiza estado local e move para Já Contatados imediatamente
   AppState.leadsCarregados = AppState.leadsCarregados.filter((item) => item.id !== leadId);
   LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
   LocalDB.incrementarUsoHoje(AppState.perfil.id, "abertos");
 
   atualizarResumoSuperior();
-  renderizarListaLeads();
   if (AppState.abaAtual === "contatados") {
     renderizarAbaContatados();
   }
