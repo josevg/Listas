@@ -257,11 +257,12 @@ function renderizarListaLeads() {
             <button type="button" class="btn btn-outline btn-sm" onclick="copiarScriptLead('${lead.id}')">
               Copiar Mensagem
             </button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="abrirPerfilLead('${lead.id}', this)">
+              Ver perfil
+            </button>
             </div>
 
-          <small style="display: block; margin-top: 8px; color: var(--text-muted);">
-            Ao clicar em <strong>Ver perfil</strong>, este contato vai automaticamente para <strong>Já Contatados</strong>.
-          </small>
+          
         </div>
       `;
     })
@@ -652,7 +653,7 @@ function abrirPerfilLead(leadId, btnEl) {
   const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
   const usernameLimpo = (lead.username || "").replace(/^@/, "");
 
-  // Remoção instantânea na tela antes de abrir nova aba
+  // 1. Remove imediatamente o cartão da tela atual
   const cardEl = btnEl
     ? btnEl.closest(".lead-card")
     : document.querySelector(`.lead-card button[onclick*="${leadId}"]`)?.closest(".lead-card");
@@ -660,7 +661,7 @@ function abrirPerfilLead(leadId, btnEl) {
     cardEl.remove();
   }
 
-  // Atualiza estado local e move para Já Contatados imediatamente
+  // 2. Move imediatamente para Já Contatados e atualiza contadores
   AppState.leadsCarregados = AppState.leadsCarregados.filter((item) => item.id !== leadId);
   LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
   LocalDB.incrementarUsoHoje(AppState.perfil.id, "abertos");
@@ -672,6 +673,7 @@ function abrirPerfilLead(leadId, btnEl) {
 
   registrarMetricaSilenciosa({ abertos: 1, categoria: nomeSub || null });
 
+  // 3. Em seguida, abre o perfil em uma nova aba
   if (usernameLimpo) {
     window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
   }
