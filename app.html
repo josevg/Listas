@@ -34,25 +34,7 @@
         <button type="button" onclick="window.location.reload()" class="btn btn-primary">Verificar novamente</button>
         <button type="button" id="btnSairBloqueio" class="btn btn-outline">Sair da conta</button>
       </div>
-    
-        <!-- CONTROLE MANUAL DE MENSAGENS ENVIADAS NO DIRECT -->
-        <div id="boxDirectManual" style="margin-top: 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-          <div>
-            <div style="font-size: 0.92rem; font-weight: 700;">
-              Mensagens enviadas no Direct hoje (controle manual): <span id="qtdDirectManual">0</span>
-            </div>
-            <small style="color: var(--text-muted); display: block; margin-top: 2px;">
-              Marque aqui apenas as mensagens que você realmente enviou no Direct (útil quando algum perfil está fora do ar).
-            </small>
-          </div>
-          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <button type="button" id="btnDiminuirDirect" class="btn btn-outline btn-sm" title="Diminuir 1">-1</button>
-            <button type="button" id="btnSomarDirect" class="btn btn-primary btn-sm">+1 no Direct</button>
-            <button type="button" id="btnZerarDirect" class="btn btn-ghost btn-sm">Zerar hoje</button>
-          </div>
-        </div>
-
-      </section>
+    </section>
 
     <!-- CONTEÚDO PRINCIPAL DO TERAPEUTA ATIVO -->
     <div id="conteudoApp" class="hidden">
@@ -84,7 +66,20 @@
             Use apenas um texto curto e acolhedor com uma <strong>pergunta aberta ligada à categoria</strong> (ex.: Ansiedade, Depressão). Depois que a pessoa responder e aceitar a conversa, aí sim você dá continuidade e envia seu contato ou link.
           </div>
         </div>
-</section>
+
+        <!-- TERMÔMETRO DIÁRIO LOCAL -->
+        <div style="margin-top: 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 0.9rem; font-weight: 600;">
+              Cadência de hoje neste navegador: <span id="textoCadenciaHoje">0 / 15 abordagens recomendadas hoje</span>
+            </span>
+            <span id="statusCadenciaBadge" class="badge badge-success">Ritmo seguro</span>
+          </div>
+          <div class="meter-bar">
+            <div id="barraCadenciaHoje" class="meter-fill"></div>
+          </div>
+        </div>
+      </section>
 
       <!-- CARDS DE RESUMO -->
       <section class="stats-grid">
@@ -234,6 +229,6 @@
   <script src="js/auth.js"></script>
   <script src="js/rotacao.js"></script>
   <script src="js/local-db.js"></script>
-  <script src="js/app.js?v=12"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

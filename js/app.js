@@ -182,6 +182,7 @@ async function carregarLeadsFiltrados() {
   let query = supabaseClient
     .from("perfis_leads")
     .select("*")
+    .eq("ativo", true)
     .limit(600);
 
   if (catId) query = query.eq("categoria_principal_id", catId);
@@ -216,9 +217,8 @@ function renderizarListaLeads() {
   if (!container) return;
 
   const template = obterTemplateScriptSelecionado();
-  const dadosLocais = (typeof LocalDB !== 'undefined' && AppState?.perfil?.id) ? (LocalDB.carregarDados(AppState.perfil.id) || {}) : {};
-  const contatadosMap = dadosLocais.contatados || {};
-  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !contatadosMap[l.id] && !contatadosMap[(l.username || '').replace(/^@/, '').toLowerCase()]);
+  const dadosLocais = LocalDB.carregarDados(AppState.perfil.id);
+  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !dadosLocais.contatados[l.id] && !dadosLocais.contatados[(l.username || '').replace(/^@/, '').toLowerCase()]);
 
   if (!leadsDisponiveis.length) {
     container.innerHTML = `<div class="empty-state">Nenhum perfil disponível neste filtro no momento. Tente outra subcategoria ou verifique a aba <strong>Já Contatados</strong>.</div>`;
@@ -235,7 +235,7 @@ function renderizarListaLeads() {
         <div class="lead-card">
           <div class="lead-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
             <div>
-              <h3 class="lead-username">@${(lead.username || "").replace(/^@/, "")}</h3>
+              <h3 class="lead-username">@${lead.username.replace(/^@/, "")}</h3>
               <p class="lead-name">${lead.nome_exibicao || ""}</p>
             </div>
           </div>
@@ -499,7 +499,7 @@ function alterarEstagioEngajado(leadId, novoStatus) {
   const dados = LocalDB.carregarDados(AppState.perfil.id);
   if (!dados.engajados[leadId]) return;
   dados.engajados[leadId].status = novoStatus;
-  persistirDadosLocaisSeguro(AppState.perfil.id, dados);
+  LocalDB.salvarDados(AppState.perfil.id, dados);
   renderizarAbaEngajados();
 }
 
@@ -510,7 +510,6 @@ function removerDaListaEngajados(leadId) {
 }
 
 function atualizarResumoSuperior() {
-  try { if (typeof configurarControlesDirectManual === 'function') configurarControlesDirectManual(); } catch (_) {}
   const resumo = LocalDB.obterResumoHoje(AppState.perfil.id);
   const meta = AppState.perfil.meta_diaria || 15;
 
@@ -526,7 +525,10 @@ function atualizarResumoSuperior() {
   // Termômetro diário
   const totalHoje = Math.max(resumo.copiadosHoje, resumo.abertosHoje);
   const pct = Math.min(100, Math.round((totalHoje / meta) * 100));
+  const barra = document.getElementById("barraCadenciaHoje");
+  const badge = document.getElementById("statusCadenciaBadge");
 
+  document.getElementById("textoCadenciaHoje").textContent = `${totalHoje} / ${meta} abordagens recomendadas hoje`;
   barra.style.width = `${pct}%`;
 
   if (totalHoje > meta) {
@@ -614,6 +616,7 @@ async function copiarEAbrirPerfil(leadId) {
   alert("Mensagem copiada e perfil aberto! Este contato já foi movido para 'Já Contatados'.");
 }
 
+
 async function copiarScriptLead(leadId) {
   const lead = encontrarLead(leadId);
   if (!lead) return;
@@ -676,85 +679,4 @@ function abrirPerfilLead(leadId, elClicado) {
   if (usernameLimpo) {
     window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
   }
-}
-
-function obterChaveHojeDirect() {
-  const agora = new Date();
-  const ano = agora.getFullYear();
-  const mes = String(agora.getMonth() + 1).padStart(2, "0");
-  const dia = String(agora.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
-}
-
-function obterQtdDirectHoje() {
-  if (!AppState?.perfil?.id) return 0;
-  const dados = LocalDB.carregarDados(AppState.perfil.id);
-  const chave = obterChaveHojeDirect();
-  return Number(dados?.directManual?.[chave] || 0);
-}
-
-function salvarQtdDirectHoje(novaQtd) {
-  if (!AppState?.perfil?.id) return 0;
-  const dados = LocalDB.carregarDados(AppState.perfil.id);
-  if (!dados.directManual || typeof dados.directManual !== "object") {
-    dados.directManual = {};
-  }
-  const chave = obterChaveHojeDirect();
-  const valorLimpo = Math.max(0, Number(novaQtd) || 0);
-  dados.directManual[chave] = valorLimpo;
-  persistirDadosLocaisSeguro(AppState.perfil.id, dados);
-  try { if (typeof atualizarDisplayDirectManual === 'function') atualizarDisplayDirectManual(); } catch (_) {}
-  return valorLimpo;
-}
-
-function atualizarDisplayDirectManual() {
-  const el = document.getElementById("qtdDirectManual");
-  if (el) {
-    el.textContent = String(obterQtdDirectHoje());
-  }
-}
-
-function configurarControlesDirectManual() {
-  const btnSomar = document.getElementById("btnSomarDirect");
-  const btnDiminuir = document.getElementById("btnDiminuirDirect");
-  const btnZerar = document.getElementById("btnZerarDirect");
-
-  if (btnSomar && !btnSomar.dataset.bound) {
-    btnSomar.dataset.bound = "1";
-    btnSomar.addEventListener("click", () => {
-      salvarQtdDirectHoje(obterQtdDirectHoje() + 1);
-    });
-  }
-
-  if (btnDiminuir && !btnDiminuir.dataset.bound) {
-    btnDiminuir.dataset.bound = "1";
-    btnDiminuir.addEventListener("click", () => {
-      salvarQtdDirectHoje(obterQtdDirectHoje() - 1);
-    });
-  }
-
-  if (btnZerar && !btnZerar.dataset.bound) {
-    btnZerar.dataset.bound = "1";
-    btnZerar.addEventListener("click", () => {
-      salvarQtdDirectHoje(0);
-    });
-  }
-
-  try { if (typeof atualizarDisplayDirectManual === 'function') atualizarDisplayDirectManual(); } catch (_) {}
-}
-
-function persistirDadosLocaisSeguro(perfilId, dados) {
-  if (typeof LocalDB !== "undefined") {
-    if (typeof LocalDB.salvarDados === "function") {
-      LocalDB.salvarDados(perfilId, dados);
-      return;
-    }
-    if (typeof LocalDB.salvar === "function") {
-      LocalDB.salvar(perfilId, dados);
-      return;
-    }
-  }
-  try {
-    localStorage.setItem(`mapa_conversas_local_${perfilId}`, JSON.stringify(dados));
-  } catch (_) {}
 }

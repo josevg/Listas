@@ -86,6 +86,7 @@ const AuthService = {
     const { data, error } = await supabaseClient
       .from("usuarios")
       .select("*")
+      .eq("id", userId)
       .single();
 
     if (error) {
