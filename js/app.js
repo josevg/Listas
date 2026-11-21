@@ -233,11 +233,14 @@ function renderizarListaLeads() {
 
       return `
         <div class="lead-card">
-          <div class="lead-card-header">
+          <div class="lead-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
             <div>
               <h3 class="lead-username">@${lead.username.replace(/^@/, "")}</h3>
               <p class="lead-name">${lead.nome_exibicao || ""}</p>
             </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="abrirPerfilLead('${lead.id}')">
+              Ver perfil
+            </button>
           </div>
 
           <div class="lead-badges">
