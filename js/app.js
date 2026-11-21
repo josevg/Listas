@@ -257,9 +257,7 @@ function renderizarListaLeads() {
             <button type="button" class="btn btn-outline btn-sm" onclick="copiarScriptLead('${lead.id}')">
               Copiar Mensagem
             </button>
-            <button type="button" class="btn btn-primary btn-sm" onclick="abrirPerfilLead('${lead.id}', this)">
-              Ver perfil
-            </button>
+            <a href="https://www.instagram.com/${(lead.username || '').replace(/^@/, '')}/" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm" onclick="moverLeadParaContatadosAoAbrir('${lead.id}', this)">Ver perfil</a>
             </div>
 
           
@@ -646,22 +644,21 @@ async function copiarScriptLead(leadId) {
   alert("Mensagem copiada! Agora clique em Acessar Perfil para abrir e enviar.");
 }
 
-function abrirPerfilLead(leadId, btnEl) {
+function moverLeadParaContatadosAoAbrir(leadId, elClicado) {
   const lead = encontrarLead(leadId);
   if (!lead) return;
 
   const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
-  const usernameLimpo = (lead.username || "").replace(/^@/, "");
 
-  // 1. Remove imediatamente o cartão da tela atual
-  const cardEl = btnEl
-    ? btnEl.closest(".lead-card")
-    : document.querySelector(`.lead-card button[onclick*="${leadId}"]`)?.closest(".lead-card");
+  // Remove imediatamente o cartão da tela atual
+  const cardEl = elClicado
+    ? elClicado.closest(".lead-card")
+    : document.querySelector(`.lead-card a[onclick*="${leadId}"]`)?.closest(".lead-card");
   if (cardEl) {
     cardEl.remove();
   }
 
-  // 2. Move imediatamente para Já Contatados e atualiza contadores
+  // Move imediatamente para Já Contatados no estado e no armazenamento local
   AppState.leadsCarregados = AppState.leadsCarregados.filter((item) => item.id !== leadId);
   LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
   LocalDB.incrementarUsoHoje(AppState.perfil.id, "abertos");
@@ -672,8 +669,13 @@ function abrirPerfilLead(leadId, btnEl) {
   }
 
   registrarMetricaSilenciosa({ abertos: 1, categoria: nomeSub || null });
+}
 
-  // 3. Em seguida, abre o perfil em uma nova aba
+function abrirPerfilLead(leadId, elClicado) {
+  const lead = encontrarLead(leadId);
+  if (!lead) return;
+  const usernameLimpo = (lead.username || "").replace(/^@/, "");
+  moverLeadParaContatadosAoAbrir(leadId, elClicado);
   if (usernameLimpo) {
     window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
   }
