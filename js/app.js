@@ -511,7 +511,7 @@ function removerDaListaEngajados(leadId) {
 }
 
 function atualizarResumoSuperior() {
-  configurarControlesDirectManual();
+  try { if (typeof configurarControlesDirectManual === 'function') configurarControlesDirectManual(); } catch (_) {}
   const resumo = LocalDB.obterResumoHoje(AppState.perfil.id);
   const meta = AppState.perfil.meta_diaria || 15;
 
@@ -615,7 +615,6 @@ async function copiarEAbrirPerfil(leadId) {
   alert("Mensagem copiada e perfil aberto! Este contato já foi movido para 'Já Contatados'.");
 }
 
-
 async function copiarScriptLead(leadId) {
   const lead = encontrarLead(leadId);
   if (!lead) return;
@@ -680,7 +679,6 @@ function abrirPerfilLead(leadId, elClicado) {
   }
 }
 
-
 function obterChaveHojeDirect() {
   const agora = new Date();
   const ano = agora.getFullYear();
@@ -706,7 +704,7 @@ function salvarQtdDirectHoje(novaQtd) {
   const valorLimpo = Math.max(0, Number(novaQtd) || 0);
   dados.directManual[chave] = valorLimpo;
   persistirDadosLocaisSeguro(AppState.perfil.id, dados);
-  atualizarDisplayDirectManual();
+  try { if (typeof atualizarDisplayDirectManual === 'function') atualizarDisplayDirectManual(); } catch (_) {}
   return valorLimpo;
 }
 
@@ -743,9 +741,8 @@ function configurarControlesDirectManual() {
     });
   }
 
-  atualizarDisplayDirectManual();
+  try { if (typeof atualizarDisplayDirectManual === 'function') atualizarDisplayDirectManual(); } catch (_) {}
 }
-
 
 function persistirDadosLocaisSeguro(perfilId, dados) {
   if (typeof LocalDB !== "undefined") {
