@@ -87,8 +87,8 @@ async function carregarTudoAdmin() {
   AdminState.subcategorias = resSub.data || [];
   AdminState.scripts = resScripts.data || [];
   AdminState.metricas = resMetricas.data || [];
-  AdminState.perfisAdmin = resPerfisLista.data || [];
-  AdminState.totalPerfisAtivos = AdminState.perfisAdmin.length;
+  AdminState.perfisAdmin = (resPerfis && resPerfis.lista) || [];
+  AdminState.totalPerfisAtivos = (resPerfis && typeof resPerfis.total === 'number') ? resPerfis.total : AdminState.perfisAdmin.length;
 
   atualizarCardsTopoAdmin();
   popularSelectsCategoriasAdmin();
@@ -618,4 +618,33 @@ async function excluirListaCompletaAdmin() {
 
   mostrarAlertaAdmin("success", "Lista completa de perfis removida do Supabase.");
   await carregarTudoAdmin();
+}
+
+async function buscarTodosPerfisAdmin() {
+  const [{ count }, primeiroLote] = await Promise.all([
+    supabaseClient.from("perfis_leads").select("*", { count: "exact", head: true }),
+    supabaseClient.from("perfis_leads").select("*").order("criado_em", { ascending: false }).range(0, 999)
+  ]);
+
+  let todos = primeiroLote.data || [];
+  let offset = 1000;
+  const tamanhoPagina = 1000;
+
+  while (primeiroLote.data && primeiroLote.data.length === tamanhoPagina) {
+    const { data, error } = await supabaseClient
+      .from("perfis_leads")
+      .select("*")
+      .order("criado_em", { ascending: false })
+      .range(offset, offset + tamanhoPagina - 1);
+
+    if (error || !data || !data.length) break;
+    todos = todos.concat(data);
+    if (data.length < tamanhoPagina) break;
+    offset += tamanhoPagina;
+  }
+
+  return {
+    lista: todos,
+    total: typeof count === "number" ? count : todos.length
+  };
 }
