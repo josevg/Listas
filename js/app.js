@@ -49,6 +49,10 @@ function configurarEventosUI() {
   });
 
   // Navegação por abas
+  document.getElementById("btnIrParaContatadosTopo")?.addEventListener("click", () => {
+    document.querySelector('.tab-btn[data-tab="contatados"]')?.click();
+    document.getElementById("abaContatados")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
@@ -617,3 +621,48 @@ function atualizarResumoSuperior() {
   const main = document.querySelector("main.container");
   if (main) main.prepend(banner);
 })();
+
+
+async function copiarEAbrirPerfil(leadId) {
+  const lead = encontrarLead(leadId);
+  if (!lead) return;
+
+  const idxLead = AppState.leadsCarregados.findIndex((l) => l.id === leadId);
+  const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
+  const padrao = RotacaoService.renderizarScript(obterTemplateScriptSelecionado(), lead, nomeSub, Math.max(0, idxLead));
+  const texto = AppState.textosEditados[leadId] ?? padrao;
+
+  try {
+    await navigator.clipboard.writeText(texto);
+  } catch (_) {
+    const temp = document.createElement("textarea");
+    temp.value = texto;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+  }
+
+  const usernameLimpo = (lead.username || "").replace(/^@/, "");
+  if (usernameLimpo) {
+    window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
+  }
+
+  const dados = LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
+  LocalDB.incrementarUsoHoje(AppState.perfil.id, "copiados");
+  LocalDB.incrementarUsoHoje(AppState.perfil.id, "abertos");
+
+  atualizarResumoSuperior();
+  renderizarListaLeads();
+  if (AppState.abaAtual === "contatados") {
+    renderizarAbaContatados();
+  }
+
+  registrarMetricaSilenciosa({
+    copiados: 1,
+    abertos: 1,
+    categoria: nomeSub || null
+  });
+
+  alert("Mensagem copiada e perfil aberto! Este contato já foi movido para 'Já Contatados'.");
+}
