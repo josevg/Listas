@@ -420,22 +420,23 @@ function renderizarAbaContatados() {
               const estiloBtnEngajado = engajado
                 ? "background: #16a34a; border-color: #15803d; color: #ffffff;"
                 : "";
+              const textoBtnEngajado = engajado ? "Engajado" : "Marcar como engajado";
 
               return `
                 <tr>
                   <td>
                     <strong>@${item.username.replace(/^@/, "")}</strong><br>
                     <small>${item.nome || ""}</small>
-                    ${engajado ? `<br><span class="badge badge-success" style="margin-top: 4px;">Engajado (${engajado.status})</span>` : ""}
+                    ${engajado ? `<br><span class="badge badge-success" style="margin-top: 4px;">Engajado</span>` : ""}
                   </td>
                   <td>${item.subcategoria || "-"}</td>
                   <td>${new Date(item.data).toLocaleDateString("pt-BR")}</td>
                   <td>${item.nota || "-"}</td>
                   <td>
                     <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                      <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">ver perfil</a>
+                      <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Ver perfil</a>
                       <button type="button" class="btn btn-primary btn-sm" style="${estiloBtnEngajado}" onclick="marcarContatadoComoEngajado('${leadJsonEnc}', '${subEnc}')">
-                        marcar como engajado
+                        ${textoBtnEngajado}
                       </button>
                     </div>
                   </td>
@@ -647,4 +648,50 @@ async function copiarEAbrirPerfil(leadId) {
   });
 
   alert("Mensagem copiada e perfil aberto! Este contato já foi movido para 'Já Contatados'.");
+}
+
+
+async function copiarScriptLead(leadId) {
+  const lead = encontrarLead(leadId);
+  if (!lead) return;
+
+  const idxLead = AppState.leadsCarregados.findIndex((l) => l.id === leadId);
+  const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
+  const padrao = RotacaoService.renderizarScript(obterTemplateScriptSelecionado(), lead, nomeSub, Math.max(0, idxLead));
+  const texto = AppState.textosEditados[leadId] ?? padrao;
+
+  try {
+    await navigator.clipboard.writeText(texto);
+  } catch (_) {
+    const temp = document.createElement("textarea");
+    temp.value = texto;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+  }
+
+  const dados = LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
+  LocalDB.incrementarUsoHoje(AppState.perfil.id, "copiados");
+  atualizarResumoSuperior();
+  registrarMetricaSilenciosa({ copiados: 1, categoria: nomeSub || null });
+  alert("Mensagem copiada! Agora clique em Acessar Perfil para abrir e enviar.");
+}
+
+function abrirPerfilLead(leadId) {
+  const lead = encontrarLead(leadId);
+  if (!lead) return;
+  const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
+  const usernameLimpo = (lead.username || "").replace(/^@/, "");
+  if (usernameLimpo) {
+    window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
+  }
+  LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
+  LocalDB.incrementarUsoHoje(AppState.perfil.id, "abertos");
+  atualizarResumoSuperior();
+  renderizarListaLeads();
+  if (AppState.abaAtual === "contatados") {
+    renderizarAbaContatados();
+  }
+  registrarMetricaSilenciosa({ abertos: 1, categoria: nomeSub || null });
 }
