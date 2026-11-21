@@ -609,7 +609,6 @@ async function excluirListaCompletaAdmin() {
   const { error } = await supabaseClient
     .from("perfis_leads")
     .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
 
   if (error) {
     mostrarAlertaAdmin("danger", `Erro ao excluir lista completa: ${error.message}`);

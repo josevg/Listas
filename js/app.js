@@ -182,7 +182,6 @@ async function carregarLeadsFiltrados() {
   let query = supabaseClient
     .from("perfis_leads")
     .select("*")
-    .eq("ativo", true)
     .limit(600);
 
   if (catId) query = query.eq("categoria_principal_id", catId);
