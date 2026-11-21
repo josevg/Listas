@@ -407,39 +407,41 @@ function renderizarAbaContatados() {
         </thead>
         <tbody>
           ${itens
-            .map(
-              (item) => {
-                const engajado = dados.engajados?.[item.id];
-                const leadRef = {
-                  id: item.id,
-                  username: item.username,
-                  nome_exibicao: item.nome || item.username
-                };
-                const leadJsonEnc = encodeURIComponent(JSON.stringify(leadRef));
-                const subEnc = encodeURIComponent(item.subcategoria || "");
+            .map((item) => {
+              const engajado = dados.engajados?.[item.id];
+              const leadRef = {
+                id: item.id,
+                username: item.username,
+                nome_exibicao: item.nome || item.username
+              };
+              const leadJsonEnc = encodeURIComponent(JSON.stringify(leadRef));
+              const subEnc = encodeURIComponent(item.subcategoria || "");
 
-                return `
-                  <tr>
-                    <td>
-                      <strong>@${item.username.replace(/^@/, "")}</strong><br>
-                      <small>${item.nome || ""}</small>
-                      ${engajado ? `<br><span class="badge badge-warning" style="margin-top: 4px;">Engajado (${engajado.status})</span>` : ""}
-                    </td>
-                    <td>${item.subcategoria || "-"}</td>
-                    <td>${new Date(item.data).toLocaleDateString("pt-BR")}</td>
-                    <td>${item.nota || "-"}</td>
-                    <td>
-                      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                        <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Abrir IG</a>
-                        <button type="button" class="btn btn-primary btn-sm" onclick="marcarContatadoComoEngajado('${leadJsonEnc}', '${subEnc}')">
-                          ${engajado ? "Atualizar Engajado" : "+ Engajado"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                `;
-              }
-            )
+              const estiloBtnEngajado = engajado
+                ? "background: #16a34a; border-color: #15803d; color: #ffffff;"
+                : "";
+
+              return `
+                <tr>
+                  <td>
+                    <strong>@${item.username.replace(/^@/, "")}</strong><br>
+                    <small>${item.nome || ""}</small>
+                    ${engajado ? `<br><span class="badge badge-success" style="margin-top: 4px;">Engajado (${engajado.status})</span>` : ""}
+                  </td>
+                  <td>${item.subcategoria || "-"}</td>
+                  <td>${new Date(item.data).toLocaleDateString("pt-BR")}</td>
+                  <td>${item.nota || "-"}</td>
+                  <td>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                      <a href="https://www.instagram.com/${item.username.replace(/^@/, "")}/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">ver perfil</a>
+                      <button type="button" class="btn btn-primary btn-sm" style="${estiloBtnEngajado}" onclick="marcarContatadoComoEngajado('${leadJsonEnc}', '${subEnc}')">
+                        marcar como engajado
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            })
             .join("")}
         </tbody>
       </table>
