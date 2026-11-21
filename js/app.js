@@ -217,8 +217,9 @@ function renderizarListaLeads() {
   if (!container) return;
 
   const template = obterTemplateScriptSelecionado();
-  const dadosLocais = LocalDB.carregarDados(AppState.perfil.id);
-  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !dadosLocais.contatados[l.id] && !dadosLocais.contatados[(l.username || '').replace(/^@/, '').toLowerCase()]);
+  const dadosLocais = (typeof LocalDB !== 'undefined' && AppState?.perfil?.id) ? (LocalDB.carregarDados(AppState.perfil.id) || {}) : {};
+  const contatadosMap = dadosLocais.contatados || {};
+  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !contatadosMap[l.id] && !contatadosMap[(l.username || '').replace(/^@/, '').toLowerCase()]);
 
   if (!leadsDisponiveis.length) {
     container.innerHTML = `<div class="empty-state">Nenhum perfil disponível neste filtro no momento. Tente outra subcategoria ou verifique a aba <strong>Já Contatados</strong>.</div>`;
@@ -499,7 +500,7 @@ function alterarEstagioEngajado(leadId, novoStatus) {
   const dados = LocalDB.carregarDados(AppState.perfil.id);
   if (!dados.engajados[leadId]) return;
   dados.engajados[leadId].status = novoStatus;
-  LocalDB.salvarDados(AppState.perfil.id, dados);
+  persistirDadosLocaisSeguro(AppState.perfil.id, dados);
   renderizarAbaEngajados();
 }
 
@@ -704,7 +705,7 @@ function salvarQtdDirectHoje(novaQtd) {
   const chave = obterChaveHojeDirect();
   const valorLimpo = Math.max(0, Number(novaQtd) || 0);
   dados.directManual[chave] = valorLimpo;
-  LocalDB.salvarDados(AppState.perfil.id, dados);
+  persistirDadosLocaisSeguro(AppState.perfil.id, dados);
   atualizarDisplayDirectManual();
   return valorLimpo;
 }
@@ -743,4 +744,21 @@ function configurarControlesDirectManual() {
   }
 
   atualizarDisplayDirectManual();
+}
+
+
+function persistirDadosLocaisSeguro(perfilId, dados) {
+  if (typeof LocalDB !== "undefined") {
+    if (typeof LocalDB.salvarDados === "function") {
+      LocalDB.salvarDados(perfilId, dados);
+      return;
+    }
+    if (typeof LocalDB.salvar === "function") {
+      LocalDB.salvar(perfilId, dados);
+      return;
+    }
+  }
+  try {
+    localStorage.setItem(`mapa_conversas_local_${perfilId}`, JSON.stringify(dados));
+  } catch (_) {}
 }
