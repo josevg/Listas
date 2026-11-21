@@ -87,7 +87,7 @@ async function carregarTudoAdmin() {
   AdminState.subcategorias = resSub.data || [];
   AdminState.scripts = resScripts.data || [];
   AdminState.metricas = resMetricas.data || [];
-  AdminState.perfisAdmin = (resPerfis && resPerfis.lista) || [];
+  AdminState.perfisAdmin = (resPerfis && Array.isArray(resPerfis.lista)) ? resPerfis.lista : [];
   AdminState.totalPerfisAtivos = (resPerfis && typeof resPerfis.total === 'number') ? resPerfis.total : AdminState.perfisAdmin.length;
 
   atualizarCardsTopoAdmin();
@@ -620,31 +620,43 @@ async function excluirListaCompletaAdmin() {
   await carregarTudoAdmin();
 }
 
+
 async function buscarTodosPerfisAdmin() {
-  const [{ count }, primeiroLote] = await Promise.all([
-    supabaseClient.from("perfis_leads").select("*", { count: "exact", head: true }),
-    supabaseClient.from("perfis_leads").select("*").order("criado_em", { ascending: false }).range(0, 999)
-  ]);
-
-  let todos = primeiroLote.data || [];
-  let offset = 1000;
   const tamanhoPagina = 1000;
+  let countExato = null;
 
-  while (primeiroLote.data && primeiroLote.data.length === tamanhoPagina) {
+  try {
+    const resCount = await supabaseClient
+      .from("perfis_leads")
+      .select("id", { count: "exact", head: true });
+    if (resCount && typeof resCount.count === "number") {
+      countExato = resCount.count;
+    }
+  } catch (_) {}
+
+  let todos = [];
+  let offset = 0;
+
+  while (true) {
     const { data, error } = await supabaseClient
       .from("perfis_leads")
       .select("*")
       .order("criado_em", { ascending: false })
       .range(offset, offset + tamanhoPagina - 1);
 
-    if (error || !data || !data.length) break;
+    if (error || !Array.isArray(data) || data.length === 0) {
+      break;
+    }
+
     todos = todos.concat(data);
-    if (data.length < tamanhoPagina) break;
+    if (data.length < tamanhoPagina) {
+      break;
+    }
     offset += tamanhoPagina;
   }
 
   return {
     lista: todos,
-    total: typeof count === "number" ? count : todos.length
+    total: typeof countExato === "number" ? countExato : todos.length
   };
 }
