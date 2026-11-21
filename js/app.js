@@ -510,6 +510,7 @@ function removerDaListaEngajados(leadId) {
 }
 
 function atualizarResumoSuperior() {
+  configurarControlesDirectManual();
   const resumo = LocalDB.obterResumoHoje(AppState.perfil.id);
   const meta = AppState.perfil.meta_diaria || 15;
 
@@ -525,10 +526,7 @@ function atualizarResumoSuperior() {
   // Termômetro diário
   const totalHoje = Math.max(resumo.copiadosHoje, resumo.abertosHoje);
   const pct = Math.min(100, Math.round((totalHoje / meta) * 100));
-  const barra = document.getElementById("barraCadenciaHoje");
-  const badge = document.getElementById("statusCadenciaBadge");
 
-  document.getElementById("textoCadenciaHoje").textContent = `${totalHoje} / ${meta} abordagens recomendadas hoje`;
   barra.style.width = `${pct}%`;
 
   if (totalHoje > meta) {
@@ -679,4 +677,70 @@ function abrirPerfilLead(leadId, elClicado) {
   if (usernameLimpo) {
     window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
   }
+}
+
+
+function obterChaveHojeDirect() {
+  const agora = new Date();
+  const ano = agora.getFullYear();
+  const mes = String(agora.getMonth() + 1).padStart(2, "0");
+  const dia = String(agora.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function obterQtdDirectHoje() {
+  if (!AppState?.perfil?.id) return 0;
+  const dados = LocalDB.carregarDados(AppState.perfil.id);
+  const chave = obterChaveHojeDirect();
+  return Number(dados?.directManual?.[chave] || 0);
+}
+
+function salvarQtdDirectHoje(novaQtd) {
+  if (!AppState?.perfil?.id) return 0;
+  const dados = LocalDB.carregarDados(AppState.perfil.id);
+  if (!dados.directManual || typeof dados.directManual !== "object") {
+    dados.directManual = {};
+  }
+  const chave = obterChaveHojeDirect();
+  const valorLimpo = Math.max(0, Number(novaQtd) || 0);
+  dados.directManual[chave] = valorLimpo;
+  LocalDB.salvarDados(AppState.perfil.id, dados);
+  atualizarDisplayDirectManual();
+  return valorLimpo;
+}
+
+function atualizarDisplayDirectManual() {
+  const el = document.getElementById("qtdDirectManual");
+  if (el) {
+    el.textContent = String(obterQtdDirectHoje());
+  }
+}
+
+function configurarControlesDirectManual() {
+  const btnSomar = document.getElementById("btnSomarDirect");
+  const btnDiminuir = document.getElementById("btnDiminuirDirect");
+  const btnZerar = document.getElementById("btnZerarDirect");
+
+  if (btnSomar && !btnSomar.dataset.bound) {
+    btnSomar.dataset.bound = "1";
+    btnSomar.addEventListener("click", () => {
+      salvarQtdDirectHoje(obterQtdDirectHoje() + 1);
+    });
+  }
+
+  if (btnDiminuir && !btnDiminuir.dataset.bound) {
+    btnDiminuir.dataset.bound = "1";
+    btnDiminuir.addEventListener("click", () => {
+      salvarQtdDirectHoje(obterQtdDirectHoje() - 1);
+    });
+  }
+
+  if (btnZerar && !btnZerar.dataset.bound) {
+    btnZerar.dataset.bound = "1";
+    btnZerar.addEventListener("click", () => {
+      salvarQtdDirectHoje(0);
+    });
+  }
+
+  atualizarDisplayDirectManual();
 }
