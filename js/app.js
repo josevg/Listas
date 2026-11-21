@@ -218,7 +218,7 @@ function renderizarListaLeads() {
 
   const template = obterTemplateScriptSelecionado();
   const dadosLocais = LocalDB.carregarDados(AppState.perfil.id);
-  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !dadosLocais.contatados[l.id]);
+  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !dadosLocais.contatados[l.id] && !dadosLocais.contatados[(l.username || '').replace(/^@/, '').toLowerCase()]);
 
   if (!leadsDisponiveis.length) {
     container.innerHTML = `<div class="empty-state">Nenhum perfil disponível neste filtro no momento. Tente outra subcategoria ou verifique a aba <strong>Já Contatados</strong>.</div>`;
@@ -654,17 +654,24 @@ async function copiarScriptLead(leadId) {
 function abrirPerfilLead(leadId) {
   const lead = encontrarLead(leadId);
   if (!lead) return;
+
   const nomeSub = obterNomeSubcategoria(lead.subcategoria_id);
   const usernameLimpo = (lead.username || "").replace(/^@/, "");
   if (usernameLimpo) {
     window.open(`https://www.instagram.com/${usernameLimpo}/`, "_blank", "noopener,noreferrer");
   }
+
   LocalDB.registrarContato(AppState.perfil.id, lead, nomeSub);
   LocalDB.incrementarUsoHoje(AppState.perfil.id, "abertos");
+
+  // Remove o perfil da lista carregada na tela atual para ele sair imediatamente desta página
+  AppState.leadsCarregados = AppState.leadsCarregados.filter((item) => item.id !== leadId);
+
   atualizarResumoSuperior();
   renderizarListaLeads();
   if (AppState.abaAtual === "contatados") {
     renderizarAbaContatados();
   }
+
   registrarMetricaSilenciosa({ abertos: 1, categoria: nomeSub || null });
 }
