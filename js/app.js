@@ -183,7 +183,6 @@ async function carregarLeadsFiltrados() {
     .from("perfis_leads")
     .select("*")
     .eq("ativo", true)
-    .eq("reportado_invalido", false)
     .limit(600);
 
   if (catId) query = query.eq("categoria_principal_id", catId);
@@ -293,23 +292,7 @@ function renderizarListaLeads() {
 
           <div>
             <div class="lead-actions">
-              <button type="button" class="btn btn-primary btn-sm" onclick="acaoCopiarScript('${lead.id}')">
-                1. Copiar Script
-              </button>
-              <a href="${urlIg}" target="_blank" rel="noopener noreferrer" class="btn btn-accent btn-sm" onclick="acaoAbriuPerfil('${lead.id}')">
-                2. Abrir Instagram
-              </a>
-              <button type="button" class="btn btn-outline btn-sm" onclick="acaoMarcarEngajado('${lead.id}')">
-                + Engajado
-              </button>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-              <button type="button" class="btn btn-ghost btn-sm" onclick="acaoAlternarContatado('${lead.id}')">
-                ${jaContatado ? "Desmarcar contato" : "Marcar contatado"}
-              </button>
-              <button type="button" class="btn btn-ghost btn-sm" onclick="acaoReportarInvalido('${lead.id}')">
-                Perfil inválido
-              </button>
+              
             </div>
           </div>
         </article>
@@ -317,7 +300,6 @@ function renderizarListaLeads() {
     })
     .join("");
 }
-
 
 function atualizarTextoLeadEditado(leadId, novoTexto) {
   AppState.textosEditados[leadId] = novoTexto;
@@ -398,7 +380,6 @@ async function acaoReportarInvalido(leadId) {
   LocalDB.marcarDescartado(AppState.perfil.id, leadId);
   renderizarListaLeads();
   try {
-    await supabaseClient.rpc("reportar_perfil_lead", { p_lead_id: leadId });
   } catch (e) {}
 }
 
@@ -621,7 +602,6 @@ function atualizarResumoSuperior() {
   const main = document.querySelector("main.container");
   if (main) main.prepend(banner);
 })();
-
 
 async function copiarEAbrirPerfil(leadId) {
   const lead = encontrarLead(leadId);

@@ -79,7 +79,6 @@ async function carregarTudoAdmin() {
     supabaseClient.from("subcategorias").select("*").order("ordem"),
     supabaseClient.from("scripts").select("*").order("criado_em", { ascending: false }),
     supabaseClient.from("metricas_uso").select("*").order("ultimo_acesso", { ascending: false }),
-    supabaseClient.from("perfis_leads").select("id", { count: "exact", head: true }).eq("ativo", true).eq("reportado_invalido", false),
     supabaseClient.from("perfis_leads").select("*").order("criado_em", { ascending: false }).range(0, 4999)
   ]);
 
