@@ -127,18 +127,25 @@ const AuthService = {
       }
     }
 
-    if (perfil.data_expiracao) {
+    const ehVitalicio = Boolean(perfil.vitalicio) || !perfil.data_expiracao;
+
+    if (!ehVitalicio && perfil.data_expiracao) {
       const expiracao = new Date(perfil.data_expiracao);
       if (agora > expiracao) {
         return {
           valido: false,
           motivo: "expirado",
-          mensagem: `Seu período de acesso encerrou em ${expiracao.toLocaleDateString("pt-BR")}.`
+          mensagem: `Seu acesso venceu em ${expiracao.toLocaleDateString("pt-BR")}.`
         };
       }
     }
 
-    return { valido: true, motivo: "ok" };
+    return {
+      valido: true,
+      motivo: ehVitalicio ? "vitalicio" : "ok",
+      vitalicio: ehVitalicio,
+      dataExpiracao: perfil.data_expiracao || null
+    };
   },
 
   // 8. Proteger rotas privadas (app.html e admin.html)

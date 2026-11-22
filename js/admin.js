@@ -202,6 +202,7 @@ function renderizarTabelaTerapeutas() {
             <th>Ativo</th>
             <th>Início Acesso</th>
             <th>Expiração</th>
+            <th>Vitalício</th>
             <th>Grupo (10/grupo)</th>
             <th>Meta/Dia</th>
             <th>Salvar</th>
@@ -236,6 +237,9 @@ function renderizarTabelaTerapeutas() {
                   <td>
                     <input type="datetime-local" class="input usr-expiracao" style="padding: 6px; font-size: 0.82rem;" value="${toInputDateTimeLocal(u.data_expiracao)}" />
                   </td>
+                  <td style="text-align: center;">
+                    <input type="checkbox" class="usr-vitalicio" ${!u.data_expiracao ? "checked" : ""} title="Marcar acesso vitalício" />
+                  </td>
                   <td>
                     <input type="number" min="1" class="input usr-grupo" style="width: 72px; padding: 6px;" value="${u.grupo_rotacao || 1}" />
                   </td>
@@ -260,15 +264,16 @@ async function salvarUsuarioAdmin(userId) {
   if (!row) return;
 
   const ativo = row.querySelector(".usr-ativo").checked;
+  const vitalicio = row.querySelector(".usr-vitalicio")?.checked || false;
   const inicioVal = row.querySelector(".usr-inicio").value;
-  const expVal = row.querySelector(".usr-expiracao").value;
+  const expVal = vitalicio ? "" : row.querySelector(".usr-expiracao").value;
   const grupo = Math.max(1, parseInt(row.querySelector(".usr-grupo").value, 10) || 1);
   const meta = Math.max(1, parseInt(row.querySelector(".usr-meta").value, 10) || 15);
 
   const payload = {
     ativo,
     data_inicio: inicioVal ? new Date(inicioVal).toISOString() : null,
-    data_expiracao: expVal ? new Date(expVal).toISOString() : null,
+    data_expiracao: vitalicio ? null : (expVal ? new Date(expVal).toISOString() : null),
     grupo_rotacao: grupo,
     meta_diaria: meta
   };
