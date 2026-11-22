@@ -525,10 +525,10 @@ function atualizarResumoSuperior() {
   // Termômetro diário
   const totalHoje = Math.max(resumo.copiadosHoje, resumo.abertosHoje);
   const pct = Math.min(100, Math.round((totalHoje / meta) * 100));
-  const barra = document.getElementById("barraCadenciaHoje");
-  const badge = document.getElementById("statusCadenciaBadge");
 
-  document.getElementById("textoCadenciaHoje").textContent = `${totalHoje} / ${meta} abordagens recomendadas hoje`;
+
+
+
   barra.style.width = `${pct}%`;
 
   if (totalHoje > meta) {
