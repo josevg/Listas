@@ -525,11 +525,7 @@ function atualizarResumoSuperior() {
   // Termômetro diário
   const totalHoje = Math.max(resumo.copiadosHoje, resumo.abertosHoje);
   const pct = Math.min(100, Math.round((totalHoje / meta) * 100));
-
-
-
-
-  barra.style.width = `${pct}%`;
+barra.style.width = `${pct}%`;
 
   if (totalHoje > meta) {
     barra.style.backgroundColor = "var(--danger)";
