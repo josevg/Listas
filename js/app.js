@@ -31,6 +31,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!auth.statusAcesso.valido) {
     document.getElementById("telaBloqueio").classList.remove("hidden");
     document.getElementById("msgBloqueio").textContent = auth.statusAcesso.mensagem;
+    const btnWpp = document.getElementById("btnWhatsAppBloqueio");
+    if (btnWpp) {
+      const msgWpp = encodeURIComponent(
+        `Olá! Quero ativar meu acesso na plataforma (R$ 20 por 1 ano). Nome: ${auth.perfil.nome || ""} | E-mail: ${auth.perfil.email || ""}`
+      );
+      btnWpp.href = `https://wa.me/5561982096982?text=${msgWpp}`;
+    }
     return;
   }
 
@@ -516,10 +523,14 @@ function atualizarResumoSuperior() {
   document.getElementById("statTotalContatados").textContent = resumo.totalContatados;
   document.getElementById("statTotalEngajados").textContent = resumo.totalEngajados;
 
-  if (AppState.perfil.data_expiracao) {
-    document.getElementById("statValidade").textContent = `Até ${new Date(AppState.perfil.data_expiracao).toLocaleDateString("pt-BR")}`;
-  } else {
-    document.getElementById("statValidade").textContent = "Sem vencimento";
+  const elValidade = document.getElementById("statValidade");
+  if (elValidade) {
+    if (AppState.perfil.data_expiracao) {
+      const dataFmt = new Date(AppState.perfil.data_expiracao).toLocaleDateString("pt-BR");
+      elValidade.innerHTML = `Vence dia ${dataFmt}<br><a href="https://wa.me/5561982096982?text=${encodeURIComponent("Olá! Quero renovar por 1 ano por R$ 20. E-mail: " + (AppState.perfil.email || ""))}" target="_blank" rel="noopener noreferrer" style="font-size: 0.78rem; font-weight: 600; color: var(--primary, #0d9488); text-decoration: underline;">R$ 20 por 1 ano (WhatsApp)</a>`;
+    } else {
+      elValidade.textContent = "Acesso vitalício";
+    }
   }
 
   // Termômetro diário

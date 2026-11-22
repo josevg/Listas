@@ -70,9 +70,20 @@
       <p id="msgBloqueio" class="section-subtitle" style="margin-bottom: 18px;">
         Seu cadastro foi recebido e aguarda ativação.
       </p>
+      <div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; text-align: left;">
+        <p style="font-size: 0.95rem; color: #0f172a; margin-bottom: 6px;">
+          <strong>Como ativar ou liberar seu acesso:</strong> Envie uma mensagem no WhatsApp <strong>(61) 98209-6982</strong> informando seu nome e e-mail de cadastro.
+        </p>
+        <p style="font-size: 0.92rem; color: #0f766e; margin: 0;">
+          <strong>Plano anual:</strong> Pague apenas <strong>R$ 20 para usar por 1 ano</strong> direto pelo WhatsApp.
+        </p>
+      </div>
       <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-        <button type="button" onclick="window.location.reload()" class="btn btn-primary">Verificar novamente</button>
-        <button type="button" id="btnSairBloqueio" class="btn btn-outline">Sair da conta</button>
+        <a id="btnWhatsAppBloqueio" href="https://wa.me/5561982096982?text=Ol%C3%A1%2C%20quero%20ativar%20meu%20acesso%20(R%24%2020%20por%201%20ano)." target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="background: #16a34a; border-color: #15803d;">
+          Ativar / R$ 20 por 1 ano no WhatsApp
+        </a>
+        <button type="button" onclick="window.location.reload()" class="btn btn-outline">Verificar novamente</button>
+        <button type="button" id="btnSairBloqueio" class="btn btn-ghost">Sair da conta</button>
       </div>
     </section>
 
