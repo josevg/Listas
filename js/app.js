@@ -525,7 +525,11 @@ function atualizarResumoSuperior() {
   // Termômetro diário
   const totalHoje = Math.max(resumo.copiadosHoje, resumo.abertosHoje);
   const pct = Math.min(100, Math.round((totalHoje / meta) * 100));
-barra.style.width = `${pct}%`;
+  const barra = (document.getElementById("barraCadenciaHoje") || { style: {}, classList: { add(){}, remove(){}, toggle(){} } });
+  const badge = (document.getElementById("statusCadenciaBadge") || { style: {}, classList: { add(){}, remove(){}, toggle(){} } });
+
+  (document.getElementById("textoCadenciaHoje") || { style: {}, classList: { add(){}, remove(){}, toggle(){} } }).textContent = `${totalHoje} / ${meta} abordagens recomendadas hoje`;
+  barra.style.width = `${pct}%`;
 
   if (totalHoje > meta) {
     barra.style.backgroundColor = "var(--danger)";
