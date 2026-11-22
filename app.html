@@ -6,6 +6,46 @@
   <title>Painel do Terapeuta — Mapa de Conversas</title>
   <link rel="stylesheet" href="css/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .guia-destaque .section-title {
+      font-size: 1.25rem;
+      line-height: 1.35;
+    }
+    .guia-destaque .guia-intro {
+      font-size: 1rem;
+      line-height: 1.5;
+      color: var(--text-muted);
+      margin: 0;
+    }
+    .guia-destaque .safety-grid {
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .guia-destaque .safety-box {
+      font-size: 0.98rem;
+      line-height: 1.55;
+      padding: 14px 16px;
+    }
+    .guia-destaque .safety-box strong {
+      display: block;
+      font-size: 1.02rem;
+      margin-bottom: 6px;
+    }
+    .aviso-continuo {
+      font-size: 0.98rem;
+      line-height: 1.55;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .aviso-continuo small {
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+  </style>
 </head>
 <body>
   <header class="topbar">
@@ -39,14 +79,14 @@
     <!-- CONTEÚDO PRINCIPAL DO TERAPEUTA ATIVO -->
     <div id="conteudoApp" class="hidden">
       <!-- GUIA DE SEGURANÇA E BOAS PRÁTICAS NO TOPO -->
-      <section class="alert alert-info" aria-label="Guia de segurança no Instagram">
+      <section class="alert alert-info guia-destaque" aria-label="Guia de segurança no Instagram">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
-          <div>
-            <h1 class="section-title" style="margin-bottom: 4px;">
+          <div style="max-width: 820px;">
+            <h1 class="section-title" style="margin-bottom: 6px;">
               Orientações importantes antes de enviar mensagens no Instagram
             </h1>
-            <p style="font-size: 0.92rem; color: var(--text-muted);">
-              Siga estas boas práticas em cada perfil do Instagram que você utilizar para manter sua conta segura e aumentar suas respostas:
+            <p class="guia-intro">
+              Siga estes passos simples em cada perfil do Instagram que você usar para evitar bloqueios e ter mais respostas:
             </p>
           </div>
           <button type="button" id="btnToggleGuia" class="btn btn-outline btn-sm">Ocultar detalhes</button>
@@ -54,29 +94,16 @@
 
         <div id="corpoGuiaSeguranca" class="safety-grid">
           <div class="safety-box">
-            <strong>1. Quantidade ideal por dia (Anti-bloqueio)</strong>
-            Envie no máximo <strong>10 a 15 mensagens iniciais por dia</strong> se o seu perfil do Instagram for novo ou pouco movimentado, e <strong>20 a 25 mensagens por dia</strong> se for um perfil antigo e aquecido. Sempre faça pausas ao longo do dia — nunca envie tudo em poucos minutos.
+            <strong>1. Envie aos poucos ao longo do dia</strong>
+            Faça no máximo <strong>10 a 15 mensagens iniciais por dia</strong> em contas novas ou com pouco movimento, e <strong>20 a 25 por dia</strong> em contas antigas e ativas. Divida os envios em horários diferentes.
           </div>
           <div class="safety-box">
-            <strong>2. Nunca envie link na 1ª mensagem</strong>
-            Não coloque link de WhatsApp, site ou agendamento na primeira abordagem. O Instagram bloqueia ou oculta solicitações com links enviados para quem ainda não te segue.
+            <strong>2. Não mande link na 1ª mensagem</strong>
+            Evite colocar link de WhatsApp, site ou agendamento logo no primeiro contato. O Instagram costuma bloquear ou esconder mensagens com link para quem ainda não te segue.
           </div>
           <div class="safety-box">
-            <strong>3. Comece com uma pergunta do tema</strong>
-            Use apenas um texto curto e acolhedor com uma <strong>pergunta aberta ligada à categoria</strong> (ex.: Ansiedade, Depressão). Depois que a pessoa responder e aceitar a conversa, aí sim você dá continuidade e envia seu contato ou link.
-          </div>
-        </div>
-
-        <!-- TERMÔMETRO DIÁRIO LOCAL -->
-        <div style="margin-top: 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <span style="font-size: 0.9rem; font-weight: 600;">
-              Cadência de hoje neste navegador: <span id="textoCadenciaHoje">0 / 15 abordagens recomendadas hoje</span>
-            </span>
-            <span id="statusCadenciaBadge" class="badge badge-success">Ritmo seguro</span>
-          </div>
-          <div class="meter-bar">
-            <div id="barraCadenciaHoje" class="meter-fill"></div>
+            <strong>3. Abra a conversa com uma pergunta simples</strong>
+            Use um texto curto e acolhedor com uma <strong>pergunta ligada ao tema</strong> (ex.: Ansiedade, Depressão). Assim que a pessoa responder, você continua o papo e envia seu contato ou link.
           </div>
         </div>
       </section>
@@ -105,14 +132,12 @@
         <button type="button" class="tab-btn" data-aba="backup">Backup Local</button>
       </div>
 
-      <!-- ABA 1: EXPLORAR PERFIS -->
-                  <div class="alert alert-info" style="margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <div>
-          <strong>Atualização contínua:</strong> A base de contatos está sempre sendo atualizada com novos perfis.
-          <br />
-          
-          <small style="display: block; margin-top: 4px;">
-            <strong>Dias de respiro:</strong> além da cadência diária, vale intercalar dias de pausa para manter a conta saudável sem risco de bloqueios (ex.: enviar por 3 dias e pular 1 dia, ajustando ao ritmo da sua conta).
+      <!-- AVISO DE ATUALIZAÇÃO E PAUSA -->
+      <div class="alert alert-info aviso-continuo">
+        <div style="max-width: 820px;">
+          <strong>Atualização contínua:</strong> A base de contatos recebe novos perfis com frequência.
+          <small style="display: block; margin-top: 6px;">
+            <strong>Dias de pausa:</strong> além do limite diário, vale tirar dias de descanso para manter a conta saudável (por exemplo: enviar por 3 dias e pausar 1 dia, conforme o ritmo do seu perfil).
           </small>
         </div>
         <button type="button" id="btnIrParaContatadosTopo" class="btn btn-outline btn-sm">
@@ -120,7 +145,8 @@
         </button>
       </div>
 
-    <section id="abaExplorar">
+      <!-- ABA 1: EXPLORAR PERFIS -->
+      <section id="abaExplorar">
         <div class="card" style="margin-bottom: 16px;">
           <div class="filters-bar">
             <div class="field">
@@ -229,6 +255,6 @@
   <script src="js/auth.js"></script>
   <script src="js/rotacao.js"></script>
   <script src="js/local-db.js"></script>
-  <script src="js/app.js?v=8"></script>
+  <script src="js/app.js?v=13"></script>
 </body>
-</html> 
+</html>
