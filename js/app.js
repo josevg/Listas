@@ -186,22 +186,33 @@ async function carregarLeadsFiltrados() {
   const catId = document.getElementById("filtroCategoriaPrincipal").value;
   const subId = document.getElementById("filtroSubcategoria").value;
 
-  let query = supabaseClient
-    .from("perfis_leads")
-    .select("*")
-    .eq("ativo", true)
-    .limit(600);
+  let todos = [];
+  let offset = 0;
+  const tamanhoPagina = 1000;
 
-  if (catId) query = query.eq("categoria_principal_id", catId);
-  if (subId && subId !== "todas") query = query.eq("subcategoria_id", subId);
+  while (true) {
+    let query = supabaseClient
+      .from("perfis_leads")
+      .select("*")
+      .eq("ativo", true)
+      .range(offset, offset + tamanhoPagina - 1);
 
-  const { data, error } = await query;
-  if (error) {
-    container.innerHTML = `<div class="alert alert-danger">Erro ao carregar perfis: ${error.message}</div>`;
-    return;
+    if (catId) query = query.eq("categoria_principal_id", catId);
+    if (subId && subId !== "todas") query = query.eq("subcategoria_id", subId);
+
+    const { data, error } = await query;
+    if (error) {
+      container.innerHTML = `<div class="alert alert-danger">Erro ao carregar perfis: ${error.message}</div>`;
+      return;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) break;
+    todos = todos.concat(data);
+    if (data.length < tamanhoPagina) break;
+    offset += tamanhoPagina;
   }
 
-  AppState.leadsCarregados = data || [];
+  AppState.leadsCarregados = todos;
   renderizarListaLeads();
 }
 
@@ -225,7 +236,55 @@ function renderizarListaLeads() {
 
   const template = obterTemplateScriptSelecionado();
   const dadosLocais = LocalDB.carregarDados(AppState.perfil.id);
-  const leadsDisponiveis = AppState.leadsCarregados.filter((l) => !dadosLocais.contatados[l.id] && !dadosLocais.contatados[(l.username || '').replace(/^@/, '').toLowerCase()]);
+  const statusLocal = document.getElementById("filtroStatusLocal")?.value || "nao_contatados";
+  const ordenacao = document.getElementById("filtroOrdenacao")?.value || "rotacao";
+  const termoBusca = (document.getElementById("buscaPerfil")?.value || "").trim().toLowerCase();
+
+  let leadsDisponiveis = AppState.leadsCarregados.filter((l) => {
+    const userLimpo = (l.username || "").replace(/^@/, "").toLowerCase();
+    const jaContatado = Boolean(dadosLocais.contatados[l.id] || dadosLocais.contatados[userLimpo]);
+    if (statusLocal === "nao_contatados" && jaContatado) return false;
+    if (termoBusca) {
+      const nome = (l.nome_exibicao || "").toLowerCase();
+      if (!userLimpo.includes(termoBusca) && !nome.includes(termoBusca)) return false;
+    }
+    return true;
+  });
+
+  // Ordem sequencial de blocos partindo do bloco do terapeuta (ex.: A -> B -> C -> D, ou C -> D -> A -> B)
+  const ordemBlocosBase = ["A", "B", "C", "D"];
+  const blocoPrincipal = typeof RotacaoService !== "undefined"
+    ? RotacaoService.obterBlocoPrincipal(AppState.perfil.grupo_rotacao || 1)
+    : "A";
+  const idxInicio = Math.max(0, ordemBlocosBase.indexOf(blocoPrincipal));
+  const sequenciaBlocos = [
+    ...ordemBlocosBase.slice(idxInicio),
+    ...ordemBlocosBase.slice(0, idxInicio)
+  ];
+
+  leadsDisponiveis.sort((a, b) => {
+    if (ordenacao === "engajamento") {
+      return (b.score_engajamento || 0) - (a.score_engajamento || 0);
+    }
+    if (ordenacao === "recentes") {
+      return new Date(b.criado_em || 0) - new Date(a.criado_em || 0);
+    }
+    // Padrão "rotacao": esgota primeiro o bloco atual do terapeuta e passa automaticamente para o próximo bloco
+    const posA = sequenciaBlocos.indexOf((a.bloco || "A").toUpperCase());
+    const posB = sequenciaBlocos.indexOf((b.bloco || "A").toUpperCase());
+    const rankA = posA === -1 ? 99 : posA;
+    const rankB = posB === -1 ? 99 : posB;
+    if (rankA !== rankB) return rankA - rankB;
+    return (b.score_engajamento || 0) - (a.score_engajamento || 0);
+  });
+
+  // Limita renderização por página para manter o navegador leve e habilita botão "Carregar mais perfis"
+  const totalFiltrado = leadsDisponiveis.length;
+  const btnMais = document.getElementById("btnCarregarMais");
+  if (btnMais) {
+    btnMais.classList.toggle("hidden", totalFiltrado <= AppState.limiteExibicao);
+  }
+  leadsDisponiveis = leadsDisponiveis.slice(0, AppState.limiteExibicao);
 
   if (!leadsDisponiveis.length) {
     container.innerHTML = `<div class="empty-state">Nenhum perfil disponível neste filtro no momento. Tente outra subcategoria ou verifique a aba <strong>Já Contatados</strong>.</div>`;
